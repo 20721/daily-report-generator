@@ -23,9 +23,11 @@ jobs:
         run: npm install
 
       - name: Build Windows executable
-        run: npm run build
+        run: |
+          npm run build -- --verbose
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEBUG: electron-builder
 
       - name: Upload Release Assets
         uses: softprops/action-gh-release@v1
