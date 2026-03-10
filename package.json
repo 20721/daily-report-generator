@@ -5,8 +5,7 @@
   "main": "src/main.js",
   "scripts": {
     "start": "electron .",
-    "build": "electron-builder --win",
-    "build:all": "electron-builder --win --mac --linux"
+    "build": "electron-builder --win"
   },
   "author": "瓶子 <pzxsky@gmail.com>",
   "license": "MIT",
@@ -25,8 +24,7 @@
       "config.json"
     ],
     "win": {
-      "target": "nsis",
-      "icon": "src/icon.ico"
+      "target": "nsis"
     },
     "nsis": {
       "oneClick": false,
