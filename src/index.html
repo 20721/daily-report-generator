@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>钻井日报生成器</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <h1>🛢️ 钻井日报生成器</h1>
+    
+    <div class="form-section">
+      <h2>基本信息</h2>
+      <div class="form-row">
+        <label>单位名称：<input type="text" id="unitName" value="Rig919"></label>
+        <label>日期：<input type="date" id="date"></label>
+        <label>所在区域：<input type="text" id="area" value="H"></label>
+      </div>
+      <div class="form-row">
+        <label>井号：<input type="text" id="wellName" value="Raphia SW1-22"></label>
+        <label>设计井深 (m)：<input type="text" id="designDepth" value="1086"></label>
+        <label>当前井深 (m)：<input type="text" id="currentDepth" value=""></label>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <h2>人员情况</h2>
+      <div class="staff-grid" id="staffGrid"></div>
+      <div class="form-row">
+        <label>基地经理：<input type="text" id="manager" value="赵铁寨"></label>
+        <label>驻井工作：<input type="checkbox" id="managerOnSite" checked></label>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <h2>物资情况</h2>
+      <div class="form-row">
+        <label>生活物资储备 (天)：<input type="number" id="foodDays" value="30"></label>
+        <label>柴油量 (方)：<input type="number" id="dieselAmount" value="53"></label>
+        <label>可用天数：<input type="number" id="dieselDays" value="13"></label>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <h2>今日工况</h2>
+      <div class="condition-tags" id="todayConditions"></div>
+      <div class="custom-input">
+        <input type="text" id="customTodayCondition" placeholder="输入自定义工况，回车添加">
+        <button onclick="addCustomCondition('today')">添加</button>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <h2>下步工况</h2>
+      <div class="condition-tags" id="nextConditions"></div>
+      <div class="custom-input">
+        <input type="text" id="customNextCondition" placeholder="输入自定义工况，回车添加">
+        <button onclick="addCustomCondition('next')">添加</button>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <h2>通讯信息</h2>
+      <div class="form-row">
+        <label>平台经理电话：<input type="text" id="phone" value="00235-93577318"></label>
+        <label>Thuraya 电话：<input type="text" id="thuraya" value="008821621906786"></label>
+      </div>
+      <div class="form-row">
+        <label>卫星座机 (内线)：<input type="text" id="satInternal" value="6660353"></label>
+        <label>卫星座机 (外线)：<input type="text" id="satExternal" value="021-80246760"></label>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <h2>安全情况</h2>
+      <textarea id="safety" rows="2">周边安全无异常</textarea>
+    </div>
+
+    <div class="button-row">
+      <button class="primary" onclick="generateReport()">📋 生成日报</button>
+      <button class="success" onclick="copyReport()">📎 复制到剪贴板</button>
+      <button onclick="exportTxt()">💾 导出 TXT</button>
+      <button onclick="saveConfig()">⚙️ 保存配置</button>
+    </div>
+
+    <div class="preview-section">
+      <h2>预览</h2>
+      <textarea id="preview" rows="15" readonly></textarea>
+    </div>
+  </div>
+  <script src="renderer.js"></script>
+</body>
+</html>
