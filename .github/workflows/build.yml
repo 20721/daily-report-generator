@@ -18,16 +18,17 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'npm'
 
       - name: Install dependencies
-        run: npm install
+        run: |
+          npm ci --legacy-peer-deps
+          npm list electron electron-builder
 
       - name: Build Windows executable
         run: |
-          npm run build -- --verbose
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          DEBUG: electron-builder
+          npm run build
+          dir dist
 
       - name: Upload Release Assets
         uses: softprops/action-gh-release@v1
