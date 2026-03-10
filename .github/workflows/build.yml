@@ -13,23 +13,14 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          persist-credentials: true
-
-      - name: Verify package-lock.json exists
-        run: |
-          dir
-          if not exist package-lock.json (
-            echo "ERROR: package-lock.json not found!"
-            exit /b 1
-          )
-          echo "package-lock.json found!"
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+
+      - name: Generate package-lock.json
+        run: npm install --package-lock-only
 
       - name: Install dependencies
         run: npm install
