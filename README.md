@@ -1,103 +1,151 @@
-# 🛢️ 钻井日报生成器
+# 每日报表生成器 (Tkinter 轻量版)
 
-石油钻井日报快速生成工具 - 减少手动输入，一键生成标准格式日报。
+**版本**: v5.1.0  
+**平台**: Windows 10 / Windows 11  
+**技术栈**: Python 3.12 + Tkinter + PyInstaller  
+**文件大小**: ~12 MB (轻量级)
 
-## 📸 功能特点
+---
 
-- ✅ 所有字段可点选或下拉，减少手动输入
-- ✅ 单位名称、区域、井号、设计井深可自定义并保存
-- ✅ 人员情况按分组显示（919 队、厨师、大夫、顶驱、运输等）
-- ✅ 今日工况/下步工况提供常用词条库，可点选组合
-- ✅ 柴油量和可用天数自动计算
-- ✅ 一键生成标准格式文本
-- ✅ 自动复制到剪贴板
-- ✅ 支持导出 txt 文件
+## 📋 项目简介
 
-## 📦 下载安装
+专为石油钻井行业设计的日报快速生成工具。
 
-### 方式 1：从 Release 下载（推荐）
+**v5.1.0 更新**:
+- ✅ 改用 Tkinter GUI (大幅减小文件体积)
+- ✅ 文件大小从 52MB 降至~12MB
+- ✅ 修复 PySide6 导入错误
+- ✅ 保持所有核心功能不变
 
-1. 访问 [Releases 页面](https://github.com/20721/daily-report-generator/releases)
-2. 下载最新的 `.exe` 安装包
-3. 运行安装程序完成安装
+---
 
-### 方式 2：手动触发云编译
+## 🚀 快速开始
 
-1. 进入 [Actions 页面](https://github.com/20721/daily-report-generator/actions)
-2. 点击 "Build Windows App" 工作流
-3. 点击 "Run workflow" 按钮
-4. 等待编译完成（约 3-5 分钟）
-5. 在下方 "Artifacts" 中下载 `daily-report-generator-windows.zip`
+### 直接使用 EXE
 
-## 🚀 本地开发
+1. 下载 `output/DailyReport.exe`
+2. 双击运行
+3. 首次运行自动弹出配置向导
+
+### 从源码运行
 
 ```bash
-# 克隆仓库
+# 1. 克隆项目
 git clone https://github.com/20721/daily-report-generator.git
 cd daily-report-generator
 
-# 安装依赖
-npm install
+# 2. 创建虚拟环境
+python -m venv venv
+venv\Scripts\activate
 
-# 启动开发模式
-npm start
+# 3. 安装依赖
+pip install -r requirements.txt
 
-# 本地打包测试
-npm run build
+# 4. 运行程序
+python app.py
 ```
 
-## 📁 项目结构
+---
 
+## 📦 构建 EXE
+
+### Windows
+
+```bash
+build_exe.bat
 ```
-daily-report-generator/
-├── src/
-│   ├── main.js          # Electron 主进程
-│   ├── index.html       # 界面 HTML
-│   ├── styles.css       # 样式
-│   └── renderer.js      # 渲染进程逻辑
-├── config.json          # 默认配置模板
-├── package.json         # 项目配置
-└── .github/workflows/
-    └── build.yml        # GitHub Actions 编译配置
+
+或手动执行:
+
+```bash
+pip install pyinstaller
+pyinstaller --onefile --windowed --name DailyReport app.py
 ```
+
+---
 
 ## ⚙️ 配置说明
 
-首次运行时会自动创建配置文件，位置：
-- Windows: `%APPDATA%\daily-report-generator\config.json`
+### 配置位置
 
-可自定义配置：
-- 单位名称、区域、井号
-- 人员分组默认人数
-- 工况词条库
-- 通讯信息模板
-
-## 📝 使用流程
-
-1. 打开应用，日期默认为今天
-2. 选择或修改基本信息（单位、井号等）
-3. 调整人员数量（数字调节器）
-4. 点选今日工况和下步工况
-5. 输入柴油量和可用天数
-6. 点击"生成日报"预览
-7. 点击"复制到剪贴板"或"导出 TXT"
-
-## 🔄 发布新版本
-
-```bash
-# 修改 package.json 版本号
-# 提交并推送
-git commit -am "v1.0.1 - 更新说明"
-git tag v1.0.1
-git push origin v1.0.1
+```
+%APPDATA%\DailyReportApp\config.json
 ```
 
-推送 tag 后会自动触发编译并上传到 Release。
+### 配置内容
+
+- 基础信息（单位、井号、设计井深等）
+- 人员模块（中方/外籍/特殊说明）
+- 通讯信息（电话、安全情况等）
+- 工况词条（可自定义）
+
+---
+
+## 📝 使用说明
+
+### 首次运行
+
+1. 启动程序后自动弹出配置向导
+2. 填写基础信息
+3. 配置人员数量
+4. 填写通讯信息
+5. 完成配置，进入主界面
+
+### 日常使用
+
+1. 确认日期（默认当天）
+2. 填写当前井深
+3. 点击工况词条添加到"今日工况"或"下步工况"
+4. 点击"生成报表"预览
+5. 点击"复制到剪贴板"
+
+### 工况词条焦点
+
+- 点击"今日工况"输入框 → 词条添加到今日工况
+- 点击"下步工况"输入框 → 词条添加到下步工况
+
+---
+
+## 📤 功能列表
+
+- ✅ 首次运行设置向导
+- ✅ 全中文 Tkinter 界面
+- ✅ 模块化人员配置
+- ✅ 工况词条管理（点击添加到焦点）
+- ✅ 报表生成和复制
+- ✅ 单文件 EXE 发布 (~12MB)
+- ✅ 自动保存配置
+- ✅ 配置保存到 %APPDATA%
+
+---
+
+## 🔧 故障排除
+
+### 程序无法启动
+
+1. 删除 `%APPDATA%\DailyReportApp\config.json` 重置配置
+2. 查看日志文件：`%APPDATA%\DailyReportApp\logs\`
+
+### 配置保存失败
+
+1. 检查磁盘空间
+2. 检查 `%APPDATA%` 目录权限
+
+---
+
+## 📞 联系信息
+
+**开发者**: Freely (瓶子)  
+**QQ**: 20721  
+**Email**: pzxsky@gmail.com  
+**GitHub**: https://github.com/20721/daily-report-generator
+
+---
 
 ## 📄 许可证
 
-MIT License
+© 2026 All Rights Reserved.
 
-## 👤 作者
+---
 
-瓶子 <pzxsky@gmail.com>
+*最后更新：2026-03-13*
