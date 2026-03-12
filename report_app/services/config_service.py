@@ -1,125 +1,222 @@
-"""配置服务 - 负责配置读写"""
+"""配置服务 - 负责配置读写和验证"""
 import json
 import os
 from pathlib import Path
 from datetime import datetime
-from report_app.models.config_models import AppConfig, BasicInfoConfig
-from report_app.utils.paths import get_config_dir, get_config_path
-from report_app.utils.logger import get_logger
+from typing import Dict, List, Tuple, Any, Optional
 
-logger = get_logger()
+
+class ConfigValidationError(Exception):
+    """配置验证异常"""
+    pass
 
 
 class ConfigService:
     def __init__(self):
-        self.config_path = get_config_path()
-        self.config: AppConfig = None
-        self.default_config = self._get_default_config()
+        self.config_dir = self._get_config_dir()
+        self.config_file = self.config_dir / 'config.json'
+        self.config: Optional[Dict] = None
+        self.errors: List[str] = []
+        self.warnings: List[str] = []
     
-    def _get_default_config(self) -> AppConfig:
+    def _get_config_dir(self) -> Path:
+        """获取配置目录"""
+        if os.name == 'nt':  # Windows
+            appdata = os.environ.get('APPDATA', '')
+            if appdata:
+                return Path(appdata) / 'DailyReportApp'
+        # Fallback 到程序目录
+        if getattr(sys, 'frozen', False):
+            return Path(os.path.dirname(sys.executable)) / 'config'
+        return Path(__file__).parent.parent.parent / 'config'
+    
+    def _get_default_config(self) -> Dict:
         """获取默认配置"""
-        return AppConfig(
-            basic_info=BasicInfoConfig(),
-            personnel_items=self._get_default_personnel(),
-            contact_info=self._get_default_contact(),
-            operation_tokens=self._get_default_tokens()
-        )
-    
-    def _get_default_personnel(self):
-        """默认人员模块"""
-        return [
-            {"id": "unit_chinese", "name": "919 队", "category_tag": "chinese", "count": 14,
-             "include_in_bracket_detail": True, "include_in_chinese_total": True,
-             "include_in_local_total": False, "sort_order": 10, "enabled": True,
-             "special_title": "", "special_name": "", "special_action": ""},
-            {"id": "cook", "name": "外聘厨师", "category_tag": "chinese", "count": 3,
-             "include_in_bracket_detail": True, "include_in_chinese_total": True,
-             "include_in_local_total": False, "sort_order": 20, "enabled": True,
-             "special_title": "", "special_name": "", "special_action": ""},
-            {"id": "local", "name": "919 队当地雇员", "category_tag": "local_foreign", "count": 29,
-             "include_in_bracket_detail": False, "include_in_chinese_total": False,
-             "include_in_local_total": True, "sort_order": 10, "enabled": True,
-             "special_title": "", "special_name": "", "special_action": ""},
-            {"id": "soldier", "name": "士兵", "category_tag": "local_foreign", "count": 8,
-             "include_in_bracket_detail": False, "include_in_chinese_total": False,
-             "include_in_local_total": True, "sort_order": 20, "enabled": True,
-             "special_title": "", "special_name": "", "special_action": ""},
-            {"id": "manager", "name": "基地经理", "category_tag": "special", "count": 1,
-             "include_in_bracket_detail": True, "include_in_chinese_total": True,
-             "include_in_local_total": False, "sort_order": 100, "enabled": True,
-             "special_title": "基地经理", "special_name": "赵铁寨", "special_action": "驻井指导工作"},
-        ]
-    
-    def _get_default_contact(self):
-        """默认通讯信息"""
         return {
-            "communication_status": "当地手机信号差",
-            "manager_phone": "00235-93577318",
-            "thuraya_phone": "008821621906786",
-            "sat_phone_internal": "6660353（内线）",
-            "sat_phone_external": "021-80246760（外线）",
-            "security_status": "周边安全无异常"
+            'version': '1.0',
+            'fixed_fields': {
+                'unit_name': '',
+                'region': '',
+                'well_name': '',
+                'design_depth': 0,
+                'supply_days': 30,
+                'diesel_volume': 50,
+                'diesel_days': 15
+            },
+            'personnel_modules': [],
+            'work_tokens': {
+                'all_tokens': [],
+                'today': [],
+                'next': []
+            },
+            'comm_info': {
+                'status': '',
+                'manager_phone': '',
+                'thuraya_phone': '',
+                'sat_internal': '',
+                'sat_external': '',
+                'security': ''
+            },
+            'current_data': {
+                'date': datetime.now().strftime('%Y.%m.%d'),
+                'current_depth': 0
+            },
+            'ui_prefs': {
+                'count_range_min': 1,
+                'count_range_max': 20
+            }
         }
     
-    def _get_default_tokens(self):
-        """默认工况词条"""
-        return [
-            {"id": "t1", "text": "下套管", "sort_order": 10, "enabled": True},
-            {"id": "t2", "text": "循环", "sort_order": 20, "enabled": True},
-            {"id": "t3", "text": "固井", "sort_order": 30, "enabled": True},
-            {"id": "t4", "text": "候凝", "sort_order": 40, "enabled": True},
-            {"id": "t5", "text": "安装套管头", "sort_order": 50, "enabled": True},
-            {"id": "t6", "text": "安装 BOP", "sort_order": 60, "enabled": True},
-            {"id": "t7", "text": "试压", "sort_order": 70, "enabled": True},
-            {"id": "t8", "text": "BOP 试压", "sort_order": 80, "enabled": True},
-            {"id": "t9", "text": "组合二开钻具", "sort_order": 90, "enabled": True},
-            {"id": "t10", "text": "下钻", "sort_order": 100, "enabled": True},
-            {"id": "t11", "text": "钻塞", "sort_order": 110, "enabled": True},
-            {"id": "t12", "text": "二开钻进", "sort_order": 120, "enabled": True},
-        ]
-    
-    def load(self) -> AppConfig:
-        """加载配置"""
+    def load(self) -> Tuple[bool, str]:
+        """
+        加载配置文件
+        返回：(成功标志，错误信息)
+        """
         try:
-            if not self.config_path.exists():
-                logger.info("配置文件不存在，使用默认配置")
-                self.config = self.default_config
-                return self.config
+            if not self.config_file.exists():
+                self.config = self._get_default_config()
+                return True, '配置文件不存在，已创建默认配置'
             
-            with open(self.config_path, 'r', encoding='utf-8') as f:
-                data = json.load(f)
-                self.config = AppConfig(**data)
-                logger.info(f"配置已加载：{self.config_path}")
-                return self.config
+            with open(self.config_file, 'r', encoding='utf-8') as f:
+                self.config = json.load(f)
+            
+            # 验证配置
+            is_valid, errors = self.validate_config()
+            if not is_valid:
+                return False, '配置文件验证失败：' + '; '.join(errors)
+            
+            return True, '配置加载成功'
+        except json.JSONDecodeError as e:
+            self.config = self._get_default_config()
+            return False, f'配置文件格式错误：{str(e)}'
         except Exception as e:
-            logger.error(f"加载配置失败：{e}")
-            self.config = self.default_config
-            return self.config
+            self.config = self._get_default_config()
+            return False, f'加载配置失败：{str(e)}'
     
-    def save(self, config: AppConfig) -> bool:
-        """保存配置"""
+    def save(self) -> Tuple[bool, str]:
+        """
+        保存配置文件
+        返回：(成功标志，错误信息)
+        """
         try:
-            self.config_path.parent.mkdir(parents=True, exist_ok=True)
+            # 保存前先验证
+            is_valid, errors = self.validate_config()
+            if not is_valid:
+                return False, '配置验证失败：' + '; '.join(errors)
+            
+            # 创建目录
+            self.config_dir.mkdir(parents=True, exist_ok=True)
             
             # 备份旧配置
-            if self.config_path.exists():
-                backup_path = self.config_path.parent / f"config.backup.{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-                self.config_path.rename(backup_path)
+            if self.config_file.exists():
+                backup_dir = self.config_dir / 'backups'
+                backup_dir.mkdir(parents=True, exist_ok=True)
+                timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                backup_path = backup_dir / f'config.backup.{timestamp}.json'
+                import shutil
+                shutil.copy2(self.config_file, backup_path)
             
-            with open(self.config_path, 'w', encoding='utf-8') as f:
-                json.dump(config.model_dump(), f, ensure_ascii=False, indent=2)
+            # 保存新配置
+            with open(self.config_file, 'w', encoding='utf-8') as f:
+                json.dump(self.config, f, ensure_ascii=False, indent=2)
             
-            self.config = config
-            logger.info(f"配置已保存：{self.config_path}")
-            return True
+            # 创建必要文件夹
+            (self.config_dir / 'reports').mkdir(parents=True, exist_ok=True)
+            (self.config_dir / 'logs').mkdir(parents=True, exist_ok=True)
+            (self.config_dir / 'backups').mkdir(parents=True, exist_ok=True)
+            
+            return True, '配置保存成功'
         except Exception as e:
-            logger.error(f"保存配置失败：{e}")
-            return False
+            return False, f'保存配置失败：{str(e)}'
+    
+    def validate_config(self) -> Tuple[bool, List[str]]:
+        """
+        验证配置文件
+        返回：(是否有效，错误列表)
+        """
+        errors = []
+        
+        if not self.config:
+            errors.append('配置对象为空')
+            return False, errors
+        
+        # 验证固定字段
+        fixed = self.config.get('fixed_fields', {})
+        if not fixed.get('unit_name'):
+            errors.append('单位名称不能为空')
+        if not fixed.get('region'):
+            errors.append('所在区域不能为空')
+        if not fixed.get('well_name'):
+            errors.append('井号不能为空')
+        if fixed.get('design_depth', 0) <= 0:
+            errors.append('设计井深必须大于 0')
+        
+        # 验证人员模块
+        personnel = self.config.get('personnel_modules', [])
+        if not personnel:
+            errors.append('至少需要一个人员模块')
+        else:
+            labels = set()
+            for i, module in enumerate(personnel):
+                if not module.get('label'):
+                    errors.append(f'人员模块 [{i+1}] 缺少标签')
+                if module.get('count', 0) < 0:
+                    errors.append(f'人员模块 [{module.get("label", i+1)}] 人数不能为负数')
+                label = module.get('label', '')
+                if label in labels:
+                    errors.append(f'人员模块标签重复：{label}')
+                labels.add(label)
+        
+        # 验证工况词条
+        work_tokens = self.config.get('work_tokens', {}).get('all_tokens', [])
+        if not work_tokens:
+            errors.append('至少需要一个工况词条')
+        
+        # 验证通讯信息
+        comm = self.config.get('comm_info', {})
+        if not comm.get('status'):
+            errors.append('通讯情况不能为空')
+        if not comm.get('manager_phone'):
+            errors.append('平台经理电话不能为空')
+        if not comm.get('thuraya_phone'):
+            errors.append('Thuraya 电话不能为空')
+        if not comm.get('security'):
+            errors.append('安全情况不能为空')
+        
+        return len(errors) == 0, errors
+    
+    def get(self, key: str, default: Any = None) -> Any:
+        """获取配置值"""
+        if not self.config:
+            return default
+        return self.config.get(key, default)
+    
+    def set(self, key: str, value: Any):
+        """设置配置值"""
+        if not self.config:
+            self.config = self._get_default_config()
+        self.config[key] = value
+    
+    def get_chinese_total(self) -> int:
+        """计算中方人员总数"""
+        total = 0
+        for module in self.config.get('personnel_modules', []):
+            if module.get('category') == 'chinese':
+                total += module.get('count', 0)
+        return total
+    
+    def get_local_total(self) -> int:
+        """计算当地雇员总数"""
+        total = 0
+        for module in self.config.get('personnel_modules', []):
+            if module.get('category') == 'local':
+                total += module.get('count', 0)
+        return total
     
     def has_config(self) -> bool:
         """检查是否有配置"""
-        return self.config_path.exists()
+        return self.config_file.exists() and self.config is not None
     
-    def reset_to_default(self) -> bool:
+    def reset(self):
         """重置为默认配置"""
-        return self.save(self.default_config)
+        self.config = self._get_default_config()
