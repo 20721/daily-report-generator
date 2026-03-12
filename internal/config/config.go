@@ -63,7 +63,7 @@ type OperationToken struct {
 
 // LoadConfig 加载配置
 func LoadConfig() (*Config, error) {
-	configPath := getConfigPath()
+	configPath := GetConfigPath()
 	
 	data, err := os.ReadFile(configPath)
 	if err != nil {
@@ -81,7 +81,7 @@ func LoadConfig() (*Config, error) {
 
 // SaveConfig 保存配置
 func SaveConfig(cfg *Config) error {
-	configPath := getConfigPath()
+	configPath := GetConfigPath()
 	
 	dir := filepath.Dir(configPath)
 	os.MkdirAll(dir, 0755)
@@ -112,6 +112,22 @@ func DefaultConfig() *Config {
 		ContactInfo:    getDefaultContact(),
 		OperationTokens: getDefaultTokens(),
 	}
+}
+
+// GetConfigDir 获取配置目录（导出函数）
+func GetConfigDir() string {
+	appData := os.Getenv("APPDATA")
+	if appData != "" {
+		return filepath.Join(appData, "DailyReportApp")
+	}
+	
+	home, _ := os.UserHomeDir()
+	return filepath.Join(home, ".daily-report")
+}
+
+// GetConfigPath 获取配置文件路径（导出函数）
+func GetConfigPath() string {
+	return filepath.Join(GetConfigDir(), "config.json")
 }
 
 func getDefaultPersonnel() []PersonnelItem {
@@ -156,21 +172,4 @@ func getDefaultTokens() []OperationToken {
 		{ID: "t11", Text: "钻塞", SortOrder: 110, Enabled: true},
 		{ID: "t12", Text: "二开钻进", SortOrder: 120, Enabled: true},
 	}
-}
-
-func getConfigPath() string {
-	configDir := getConfigDir()
-	return filepath.Join(configDir, "config.json")
-}
-
-func getConfigDir() string {
-	// Windows: %APPDATA%\DailyReportApp
-	appData := os.Getenv("APPDATA")
-	if appData != "" {
-		return filepath.Join(appData, "DailyReportApp")
-	}
-	
-	// Fallback
-	home, _ := os.UserHomeDir()
-	return filepath.Join(home, ".daily-report")
 }
