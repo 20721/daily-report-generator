@@ -12,21 +12,21 @@ import (
 )
 
 type MainWindow struct {
-	window       fyne.Window
-	cfg          *config.Config
-	store        *storage.ConfigStore
-	lastFocus    string // "today" or "next"
+	window            fyne.Window
+	cfg               *config.Config
+	store             *storage.ConfigStore
+	lastFocus         string // "today" or "next"
 	
 	// UI 组件
-	unitNameEntry    *widget.Entry
-	dateEntry        *widget.Entry
-	regionEntry      *widget.Entry
-	wellNameEntry    *widget.Entry
-	designDepthEntry *widget.Entry
+	unitNameEntry     *widget.Entry
+	dateEntry         *widget.Entry
+	regionEntry       *widget.Entry
+	wellNameEntry     *widget.Entry
+	designDepthEntry  *widget.Entry
 	currentDepthEntry *widget.Entry
-	todayWorkEntry   *widget.Entry
-	nextWorkEntry    *widget.Entry
-	commStatusEntry  *widget.Entry
+	todayWorkEntry    *widget.Entry
+	nextWorkEntry     *widget.Entry
+	commStatusEntry   *widget.Entry
 	managerPhoneEntry *widget.Entry
 	thurayaPhoneEntry *widget.Entry
 	securityStatusEntry *widget.Entry
@@ -74,19 +74,23 @@ func (mw *MainWindow) createUI() {
 }
 
 func (mw *MainWindow) createMenu() *fyne.MainMenu {
-	newItem := widget.NewMenuItem("新建", func() { mw.newReport() })
-	exportItem := widget.NewMenuItem("导出 TXT", func() { mw.exportTXT() })
+	// 文件菜单
+	newItem := fyne.NewMenuItem("新建", func() { mw.newReport() })
+	exportItem := fyne.NewMenuItem("导出 TXT", func() { mw.exportTXT() })
 	fileMenu := fyne.NewMenu("文件", newItem, exportItem)
 	
-	wizardItem := widget.NewMenuItem("重新运行向导", func() { mw.showWizard() })
+	// 配置菜单
+	wizardItem := fyne.NewMenuItem("重新运行向导", func() { mw.showWizard() })
 	configMenu := fyne.NewMenu("配置", wizardItem)
 	
-	copyItem := widget.NewMenuItem("复制到剪贴板", func() { mw.copyToClipboard() })
-	previewItem := widget.NewMenuItem("预览", func() { mw.preview() })
+	// 工具菜单
+	copyItem := fyne.NewMenuItem("复制到剪贴板", func() { mw.copyToClipboard() })
+	previewItem := fyne.NewMenuItem("预览", func() { mw.preview() })
 	toolMenu := fyne.NewMenu("工具", copyItem, previewItem)
 	
-	helpItem := widget.NewMenuItem("使用说明", func() { mw.showHelp() })
-	aboutItem := widget.NewMenuItem("关于", func() { mw.showAbout() })
+	// 帮助菜单
+	helpItem := fyne.NewMenuItem("使用说明", func() { mw.showHelp() })
+	aboutItem := fyne.NewMenuItem("关于", func() { mw.showAbout() })
 	helpMenu := fyne.NewMenu("帮助", helpItem, aboutItem)
 	
 	return fyne.NewMainMenu(fileMenu, configMenu, toolMenu, helpMenu)
@@ -116,11 +120,11 @@ func (mw *MainWindow) createBasicInfo() *widget.Card {
 func (mw *MainWindow) createOperationSection() *widget.Card {
 	mw.todayWorkEntry = widget.NewEntry()
 	mw.todayWorkEntry.SetPlaceHolder("点击词条添加到今日工况")
-	mw.todayWorkEntry.OnFocusGained = func() { mw.lastFocus = "today" }
+	mw.todayWorkEntry.OnFocusChanged = func(bool) { mw.lastFocus = "today" }
 	
 	mw.nextWorkEntry = widget.NewEntry()
 	mw.nextWorkEntry.SetPlaceHolder("点击词条添加到下步工况")
-	mw.nextWorkEntry.OnFocusGained = func() { mw.lastFocus = "next" }
+	mw.nextWorkEntry.OnFocusChanged = func(bool) { mw.lastFocus = "next" }
 	
 	// 工况词条
 	tokens := mw.createTokenButtons()
@@ -146,9 +150,10 @@ func (mw *MainWindow) createTokenButtons() *fyne.Container {
 		if !token.Enabled {
 			continue
 		}
-		btn := widget.NewButton(token.Text, func(t string) {
-			mw.addToken(t)
-		}(token.Text))
+		tokenText := token.Text
+		btn := widget.NewButton(tokenText, func() {
+			mw.addToken(tokenText)
+		})
 		buttons = append(buttons, btn)
 	}
 	
@@ -230,7 +235,7 @@ func (mw *MainWindow) collectData() modules.ReportData {
 		DesignDepth:    mw.cfg.BasicInfo.DesignDepthValue,
 		DesignDepthUnit: mw.cfg.BasicInfo.DesignDepthUnit,
 		TodayWork:      mw.todayWorkEntry.Text,
-		CurrentDepth:   0, // TODO: parse from entry
+		CurrentDepth:   0,
 		NextWork:       mw.nextWorkEntry.Text,
 		CommStatus:     mw.commStatusEntry.Text,
 		ManagerPhone:   mw.managerPhoneEntry.Text,
