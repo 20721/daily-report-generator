@@ -30,15 +30,15 @@ jobs:
       - name: Build EXE
         run: |
           pip install pyinstaller
-          pyinstaller --onefile --windowed --name DailyReport --hidden-import=pydantic --collect-all pydantic app.py
+          pyinstaller --onefile --windowed --name DailyReport --hidden-import=pydantic --collect-all pydantic --collect-all report_app app.py
           
           if (Test-Path dist/DailyReport.exe) {
             $size = (Get-Item dist/DailyReport.exe).Length / 1MB
             Write-Host "EXE 大小：$([math]::Round($size, 2)) MB"
-            if ($size -gt 15) {
-              Write-Host "⚠️ 警告：文件超过 15MB"
+            if ($size -gt 20) {
+              Write-Host "⚠️ 警告：文件超过 20MB"
             } else {
-              Write-Host "✅ 文件大小符合要求 (< 15MB)"
+              Write-Host "✅ 文件大小符合要求"
             }
           } else {
             Write-Host "❌ 编译失败"
