@@ -1,7 +1,5 @@
-module daily-report-generator
+module daily-report-walk
 
 go 1.21
 
-require (
-	fyne.io/fyne/v2 v2.4.3
-)
+require github.com/lxn/walk v0.0.0-20240918164112-9c28dd8b495f
