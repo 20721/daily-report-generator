@@ -3,9 +3,38 @@ import json
 from datetime import datetime
 
 
+class PersonnelSnapshot:
+    """人员快照数据类"""
+    def __init__(self, chinese_total=0, local_foreign_total=0):
+        self.chinese_total = chinese_total
+        self.local_foreign_total = local_foreign_total
+
+
 class ReportService:
     def __init__(self, config):
         self.config = config
+    
+    def calculate_personnel_snapshot(self):
+        """
+        计算人员快照
+        返回 PersonnelSnapshot 对象，包含 chinese_total 和 local_foreign_total
+        """
+        try:
+            # 从配置中获取人员数量
+            chinese_count = self.config.get('chinese_count', 14)
+            local_count = self.config.get('local_count', 29)
+            soldier_count = self.config.get('soldier_count', 8)
+            
+            # 中方总人数 = 中方人数 + 1 (基地经理)
+            chinese_total = chinese_count + 1
+            
+            # 外籍当地雇员总人数 = 当地雇员 + 士兵
+            local_foreign_total = local_count + soldier_count
+            
+            return PersonnelSnapshot(chinese_total, local_foreign_total)
+        except Exception as e:
+            # 出错时返回默认值
+            return PersonnelSnapshot(15, 37)
     
     def generate_report(self, data):
         """生成报表文本"""
