@@ -21,12 +21,10 @@ jobs:
         with:
           go-version: '1.21'
       
-      - name: Install dependencies
+      - name: Download dependencies
         run: |
           go mod download
           go mod tidy
-          # 安装 walk 依赖的 Windows 资源编译器
-          choco install golangci-lint -y
       
       - name: Build EXE
         run: |
@@ -36,11 +34,6 @@ jobs:
           if (Test-Path ../../output/report.exe) {
             $size = (Get-Item ../../output/report.exe).Length / 1MB
             Write-Host "EXE 大小：$([math]::Round($size, 2)) MB"
-            if ($size -gt 15) {
-              Write-Host "⚠️ 警告：文件超过 15MB"
-            } else {
-              Write-Host "✅ 文件大小符合要求 (< 15MB)"
-            }
           } else {
             Write-Host "❌ 编译失败"
             exit 1
@@ -51,6 +44,5 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: output/report.exe
-          generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
