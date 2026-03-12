@@ -19,14 +19,15 @@ hiddenimports += tmp[2]
 # 收集所有子模块
 hiddenimports += collect_submodules("report_app")
 
-# 添加 pydantic
-hiddenimports += ['pydantic', 'pydantic_core']
-
-# 添加 tkinter
-hiddenimports += ['tkinter', 'tkinter.ttk', 'tkinter.messagebox', 'tkinter.filedialog']
-
 # 添加其他依赖
-hiddenimports += ['pyperclip', 'json', 'os', 'sys', 'pathlib', 'datetime']
+hiddenimports += ['pyperclip', 'json', 'os', 'sys', 'pathlib', 'datetime', 'tkinter']
+
+# 图标路径
+icon_path = 'resources/app_icon.ico'
+if os.path.exists(icon_path):
+    icon_list = [icon_path]
+else:
+    icon_list = []
 
 a = Analysis(
     ['app.py'],
@@ -65,5 +66,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=[],
+    icon=icon_list,
 )
