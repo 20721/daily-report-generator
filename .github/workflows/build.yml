@@ -25,19 +25,25 @@ jobs:
         run: |
           go mod download
           go mod tidy
+          # 安装 walk 依赖的 Windows 资源编译器
+          choco install golangci-lint -y
       
       - name: Build EXE
         run: |
           cd cmd/report
-          go build -ldflags="-s -w" -o ../../output/report.exe .
+          go build -ldflags="-s -w -H=windowsgui" -o ../../output/report.exe .
           
-          $size = (Get-Item ../../output/report.exe).Length / 1MB
-          Write-Host "EXE 大小：$([math]::Round($size, 2)) MB"
-          if ($size -gt 15) {
-            Write-Host "⚠️ 警告：文件超过 15MB"
-            exit 1
+          if (Test-Path ../../output/report.exe) {
+            $size = (Get-Item ../../output/report.exe).Length / 1MB
+            Write-Host "EXE 大小：$([math]::Round($size, 2)) MB"
+            if ($size -gt 15) {
+              Write-Host "⚠️ 警告：文件超过 15MB"
+            } else {
+              Write-Host "✅ 文件大小符合要求 (< 15MB)"
+            }
           } else {
-            Write-Host "✅ 文件大小符合要求 (< 15MB)"
+            Write-Host "❌ 编译失败"
+            exit 1
           }
       
       - name: Create Release
