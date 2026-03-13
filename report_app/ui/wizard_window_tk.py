@@ -70,34 +70,39 @@ class WizardWindow(tk.Toplevel):
     def _save_current_page_data(self):
         """保存当前页数据"""
         if self.current_page == 0:
-            self.basic_info_data = {
-                'unit_name': self.unit_name_entry.get().strip(),
-                'region': self.region_entry.get().strip(),
-                'well_name': self.well_name_entry.get().strip(),
-                'design_depth': self.design_depth_entry.get().strip()
-            }
+            # 只在控件存在时保存
+            if hasattr(self, 'unit_name_entry'):
+                self.basic_info_data = {
+                    'unit_name': getattr(self, 'unit_name_entry', None).get().strip() if hasattr(self, 'unit_name_entry') else '',
+                    'region': getattr(self, 'region_entry', None).get().strip() if hasattr(self, 'region_entry') else '',
+                    'well_name': getattr(self, 'well_name_entry', None).get().strip() if hasattr(self, 'well_name_entry') else '',
+                    'design_depth': getattr(self, 'design_depth_entry', None).get().strip() if hasattr(self, 'design_depth_entry') else ''
+                }
         elif self.current_page == 1:
-            self.personnel_data = []
-            for entry in self.personnel_entries:
-                self.personnel_data.append({
-                    'label': entry['label'],
-                    'category': entry['category'],
-                    'count': entry['count_var'].get().strip()
-                })
+            if hasattr(self, 'personnel_entries') and self.personnel_entries:
+                self.personnel_data = []
+                for entry in self.personnel_entries:
+                    self.personnel_data.append({
+                        'label': entry['label'],
+                        'category': entry['category'],
+                        'count': entry['count_var'].get().strip()
+                    })
         elif self.current_page == 2:
-            self.comm_info_data = {
-                'status': self.comm_status_entry.get().strip(),
-                'manager_phone': self.manager_phone_entry.get().strip(),
-                'thuraya_phone': self.thuraya_phone_entry.get().strip(),
-                'sat_internal': self.sat_internal_entry.get().strip(),
-                'sat_external': self.sat_external_entry.get().strip(),
-                'security': self.security_entry.get().strip()
-            }
+            if hasattr(self, 'comm_status_entry'):
+                self.comm_info_data = {
+                    'status': getattr(self, 'comm_status_entry', None).get().strip() if hasattr(self, 'comm_status_entry') else '',
+                    'manager_phone': getattr(self, 'manager_phone_entry', None).get().strip() if hasattr(self, 'manager_phone_entry') else '',
+                    'thuraya_phone': getattr(self, 'thuraya_phone_entry', None).get().strip() if hasattr(self, 'thuraya_phone_entry') else '',
+                    'sat_internal': getattr(self, 'sat_internal_entry', None).get().strip() if hasattr(self, 'sat_internal_entry') else '',
+                    'sat_external': getattr(self, 'sat_external_entry', None).get().strip() if hasattr(self, 'sat_external_entry') else '',
+                    'security': getattr(self, 'security_entry', None).get().strip() if hasattr(self, 'security_entry') else ''
+                }
     
     def _show_page(self, page_num: int):
         """显示指定页"""
-        # 先保存当前页数据
-        self._save_current_page_data()
+        # 先保存当前页数据（如果不是第一次加载）
+        if page_num != 0 or hasattr(self, 'unit_name_entry'):
+            self._save_current_page_data()
         
         self._clear_page()
         self.current_page = page_num
