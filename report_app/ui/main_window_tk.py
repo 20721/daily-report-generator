@@ -1,4 +1,4 @@
-"""主窗口 - v6.1.1 修复版"""
+"""主窗口 - v6.1.2 弹窗位置修复版"""
 import tkinter as tk
 from tkinter import ttk, messagebox
 from datetime import datetime
@@ -58,6 +58,12 @@ class MainWindow(tk.Tk):
         }
         self.config_service.save()
     
+    def _center_dialog(self, dialog, width, height):
+        """居中显示对话框"""
+        x = (dialog.winfo_screenwidth() // 2) - (width // 2)
+        y = (dialog.winfo_screenheight() // 2) - (height // 2)
+        dialog.geometry(f'{width}x{height}+{x}+{y}')
+    
     def _create_ui(self):
         """创建 UI"""
         container = ttk.Frame(self)
@@ -98,13 +104,11 @@ class MainWindow(tk.Tk):
         config = self.config_service.config
         fixed = config.get('fixed_fields', {})
         
-        # 单行显示，不使用 wraplength
         ttk.Label(frame, text=f"单位：{fixed.get('unit_name', '')}").pack(anchor='w', pady=1)
         ttk.Label(frame, text=f"区域：{fixed.get('region', '')}").pack(anchor='w', pady=1)
         ttk.Label(frame, text=f"井号：{fixed.get('well_name', '')}").pack(anchor='w', pady=1)
         ttk.Label(frame, text=f"设计：{fixed.get('design_depth', 0)}m").pack(anchor='w', pady=1)
         
-        # 当前井深（输入框在右侧）
         depth_frame = ttk.Frame(frame)
         depth_frame.pack(anchor='w', pady=(5, 2))
         ttk.Label(depth_frame, text='当前井深:').pack(side='left')
@@ -117,11 +121,11 @@ class MainWindow(tk.Tk):
         self.current_depth_entry.insert(0, current_data.get('current_depth', '0'))
     
     def _create_personnel_info(self, parent, col):
-        """创建人员信息区（可滚动 + 实时计算总数）"""
+        """创建人员信息区"""
         frame = ttk.LabelFrame(parent, text='👥 人员信息', padding=10)
         frame.pack(side='left', fill='both', expand=True, padx=5)
         
-        # 标题行（带实时总数）
+        # 标题行
         title_frame = ttk.Frame(frame)
         title_frame.pack(fill='x')
         
@@ -135,7 +139,7 @@ class MainWindow(tk.Tk):
         scroll_frame = ttk.Frame(frame)
         scroll_frame.pack(fill='both', expand=True, pady=5)
         
-        canvas = tk.Canvas(scroll_frame, height=120)
+        canvas = tk.Canvas(scroll_frame, height=100)
         scrollbar = ttk.Scrollbar(scroll_frame, orient='vertical', command=canvas.yview)
         self.personnel_scrollable = ttk.Frame(canvas)
         
@@ -153,6 +157,17 @@ class MainWindow(tk.Tk):
         scrollbar.pack(side='right', fill='y')
         
         self._refresh_personnel_display()
+        
+        # 分隔线
+        ttk.Separator(frame, orient='horizontal').pack(fill='x', pady=5)
+        
+        # 其他人员（原领导模块）
+        other_frame = ttk.LabelFrame(frame, text='其他人员', padding=5)
+        other_frame.pack(fill='both', expand=True)
+        
+        ttk.Button(other_frame, text='+ 添加', command=self._add_other_person).pack(anchor='w', pady=2)
+        
+        self._refresh_other_persons_display(other_frame)
     
     def _refresh_personnel_display(self):
         """刷新人员信息显示"""
@@ -160,18 +175,16 @@ class MainWindow(tk.Tk):
             widget.destroy()
         
         config = self.config_service.config
-        chinese_modules = [m for m in config.get('personnel_modules', []) if m.get('category') == 'chinese' and not m.get('is_leader')]
-        local_modules = [m for m in config.get('personnel_modules', []) if m.get('category') == 'local' and not m.get('is_leader')]
-        leader_modules = [m for m in config.get('personnel_modules', []) if m.get('is_leader')]
+        chinese_modules = [m for m in config.get('personnel_modules', []) if m.get('category') == 'chinese' and not m.get('is_other')]
+        local_modules = [m for m in config.get('personnel_modules', []) if m.get('category') == 'local' and not m.get('is_other')]
         
         chinese_total = sum(m.get('count', 0) for m in chinese_modules)
         local_total = sum(m.get('count', 0) for m in local_modules)
         
-        # 更新总数标签
         self.chinese_total_label.config(text=f'中方人员：{chinese_total}人')
         self.local_total_label.config(text=f'当地雇员：{local_total}人')
         
-        # 中方人员（左侧）
+        # 中方人员
         chinese_frame = ttk.LabelFrame(self.personnel_scrollable, text='中方', padding=3)
         chinese_frame.pack(side='left', fill='both', expand=True, padx=2)
         
@@ -180,7 +193,7 @@ class MainWindow(tk.Tk):
         
         ttk.Button(chinese_frame, text='+ 添加', command=lambda: self._add_person_module('chinese')).pack(pady=2)
         
-        # 当地雇员（右侧）
+        # 当地雇员
         local_frame = ttk.LabelFrame(self.personnel_scrollable, text='当地', padding=3)
         local_frame.pack(side='left', fill='both', expand=True, padx=2)
         
@@ -188,27 +201,25 @@ class MainWindow(tk.Tk):
             self._create_person_item(local_frame, module, 'local')
         
         ttk.Button(local_frame, text='+ 添加', command=lambda: self._add_person_module('local')).pack(pady=2)
+    
+    def _refresh_other_persons_display(self, parent):
+        """刷新其他人员显示"""
+        for widget in parent.winfo_children():
+            if isinstance(widget, ttk.Button):
+                continue
+            widget.destroy()
         
-        # 分隔线
-        ttk.Separator(self, orient='horizontal').pack(fill='x', pady=5)
+        config = self.config_service.config
+        other_modules = [m for m in config.get('personnel_modules', []) if m.get('is_other')]
         
-        # 领导模块
-        leader_frame = ttk.LabelFrame(self, text='领导模块', padding=5)
-        leader_frame.pack(fill='both', expand=True)
-        
-        ttk.Button(leader_frame, text='+ 添加领导', command=self._add_leader).pack(anchor='w', pady=2)
-        
-        if leader_modules:
-            for module in leader_modules:
-                leader_text = f"{module.get('title', '')}{module.get('name', '')}"
-                if module.get('action'):
-                    leader_text += f" ({module['action']})"
-                item_frame = ttk.Frame(leader_frame)
+        if other_modules:
+            for module in other_modules:
+                item_frame = ttk.Frame(parent)
                 item_frame.pack(fill='x', pady=1)
-                ttk.Label(item_frame, text=f"├─ {leader_text}", wraplength=200).pack(side='left')
-                ttk.Button(item_frame, text='×', width=2, command=lambda m=module: self._delete_leader(m)).pack(side='right')
+                ttk.Label(item_frame, text=f"├─ {module['label']} ({module['category']})", wraplength=200).pack(side='left')
+                ttk.Button(item_frame, text='×', width=2, command=lambda m=module: self._delete_other_person(m)).pack(side='right')
         else:
-            ttk.Label(leader_frame, text='（无）').pack(anchor='w', pady=5)
+            ttk.Label(parent, text='（无）').pack(anchor='w', pady=5)
     
     def _create_person_item(self, parent, module, category):
         """创建人员项"""
@@ -229,7 +240,7 @@ class MainWindow(tk.Tk):
         ttk.Label(item_frame, text='人').pack(side='left')
     
     def _update_person_count(self, module, new_count, category):
-        """更新人员数量并实时刷新总数"""
+        """更新人员数量"""
         try:
             module['count'] = int(new_count)
             self._refresh_personnel_display()
@@ -241,7 +252,7 @@ class MainWindow(tk.Tk):
         """添加人员模块"""
         dialog = tk.Toplevel(self)
         dialog.title('添加人员模块')
-        dialog.geometry('300x150')
+        self._center_dialog(dialog, 300, 150)
         dialog.transient(self)
         dialog.grab_set()
         
@@ -257,7 +268,7 @@ class MainWindow(tk.Tk):
                     'label': label,
                     'count': 1,
                     'category': category,
-                    'is_leader': False
+                    'is_other': False
                 })
                 self._auto_save()
                 dialog.destroy()
@@ -265,55 +276,46 @@ class MainWindow(tk.Tk):
         
         ttk.Button(dialog, text='确定', command=on_add).pack(pady=10)
     
-    def _add_leader(self):
-        """添加领导"""
+    def _add_other_person(self):
+        """添加其他人员（简化版）"""
         dialog = tk.Toplevel(self)
-        dialog.title('添加领导')
-        dialog.geometry('350x250')
+        dialog.title('添加其他人员')
+        self._center_dialog(dialog, 350, 140)
         dialog.transient(self)
         dialog.grab_set()
         
-        fields = {}
-        for label, key in [('称谓:', 'title'), ('姓名:', 'name'), ('人数:', 'count'), ('动作描述:', 'action')]:
-            ttk.Label(dialog, text=label).pack(pady=2)
-            entry = ttk.Entry(dialog, width=40)
-            entry.pack(pady=2)
-            fields[key] = entry
+        # 第一行：输入框
+        ttk.Label(dialog, text='人员标签:').pack(pady=2)
+        label_entry = ttk.Entry(dialog, width=40)
+        label_entry.pack(pady=2)
         
-        ttk.Label(dialog, text='属性:').pack(pady=2)
+        # 第二行：类别选择 + 保存按钮
+        btn_frame = ttk.Frame(dialog)
+        btn_frame.pack(pady=5)
+        
         category_var = tk.StringVar(value='chinese')
-        ttk.Radiobutton(dialog, text='中方', variable=category_var, value='chinese').pack()
-        ttk.Radiobutton(dialog, text='外籍', variable=category_var, value='local').pack()
+        ttk.Radiobutton(btn_frame, text='中方', variable=category_var, value='chinese').pack(side='left', padx=10)
+        ttk.Radiobutton(btn_frame, text='外籍', variable=category_var, value='local').pack(side='left', padx=10)
         
-        def on_add():
-            title = fields['title'].get().strip()
-            name = fields['name'].get().strip()
-            try:
-                count = int(fields['count'].get().strip() or '1')
-            except:
-                count = 1
-            action = fields['action'].get().strip()
-            
-            if title and name:
+        def on_save():
+            label = label_entry.get().strip()
+            if label:
                 self.config_service.config['personnel_modules'].append({
-                    'id': f"{title}{name}",
-                    'label': f"{title}{name}",
-                    'title': title,
-                    'name': name,
-                    'count': count,
+                    'id': label,
+                    'label': label,
+                    'count': 1,
                     'category': category_var.get(),
-                    'action': action,
-                    'is_leader': True
+                    'is_other': True
                 })
                 self._auto_save()
                 dialog.destroy()
                 self._refresh_personnel_display()
         
-        ttk.Button(dialog, text='确定', command=on_add).pack(pady=10)
+        ttk.Button(btn_frame, text='保存', command=on_save).pack(side='left', padx=10)
     
-    def _delete_leader(self, module):
-        """删除领导"""
-        if messagebox.askyesno('确认', f'确定删除领导"{module.get("title", "")}{module.get("name", "")}"吗？'):
+    def _delete_other_person(self, module):
+        """删除其他人员"""
+        if messagebox.askyesno('确认', f'确定删除"{module.get("label", "")}"吗？'):
             self.config_service.config['personnel_modules'] = [
                 m for m in self.config_service.config['personnel_modules']
                 if m.get('id') != module.get('id')
@@ -322,13 +324,12 @@ class MainWindow(tk.Tk):
             self._refresh_personnel_display()
     
     def _create_comm_info(self, parent, col):
-        """创建通讯信息区（修复标签和单行显示）"""
+        """创建通讯信息区"""
         frame = ttk.LabelFrame(parent, text='📞 通讯信息', padding=10)
         frame.pack(side='left', fill='both', expand=True, padx=5)
         
         comm = self.config_service.config.get('comm_info', {})
         
-        # 所有字段单行显示，不使用 wraplength
         ttk.Label(frame, text=f"通讯：{comm.get('status', '')}").pack(anchor='w', pady=1)
         ttk.Label(frame, text=f"经理：{comm.get('manager_phone', '')}").pack(anchor='w', pady=1)
         ttk.Label(frame, text=f"Thuraya: {comm.get('thuraya_phone', '')}").pack(anchor='w', pady=1)
@@ -337,7 +338,7 @@ class MainWindow(tk.Tk):
         ttk.Label(frame, text=f"安全：{comm.get('security', '')}").pack(anchor='w', pady=1)
     
     def _create_work_edit(self, parent):
-        """创建工况编辑区（修复自适应换行）"""
+        """创建工况编辑区（自动换行）"""
         work_frame = ttk.Frame(parent)
         work_frame.pack(fill='x', pady=5)
         
@@ -363,12 +364,12 @@ class MainWindow(tk.Tk):
         self.today_work_text.insert('1.0', current_data.get('today_work', ''))
         self.next_work_text.insert('1.0', current_data.get('next_work', ''))
         
-        # 工况词条（可滚动 + 自适应换行）
+        # 工况词条（自动换行）
         tokens_frame = ttk.LabelFrame(parent, text='🏷 工况词条', padding=5)
         tokens_frame.pack(fill='x', pady=5)
         
-        # 添加按钮（靠右）
-        add_btn = ttk.Button(tokens_frame, text='+ 添加词条', command=self._add_token_dialog)
+        # 添加工况按钮（靠右）
+        add_btn = ttk.Button(tokens_frame, text='+ 添加工况', command=self._add_token_dialog)
         add_btn.pack(side='right', padx=5)
         
         # 可滚动区域
@@ -414,14 +415,14 @@ class MainWindow(tk.Tk):
         self._auto_save()
     
     def _add_token_dialog(self):
-        """添加词条对话框"""
+        """添加工况对话框"""
         dialog = tk.Toplevel(self)
-        dialog.title('添加工况词条')
-        dialog.geometry('300x120')
+        dialog.title('添加工况')
+        self._center_dialog(dialog, 300, 120)
         dialog.transient(self)
         dialog.grab_set()
         
-        ttk.Label(dialog, text='词条名称:').pack(pady=5)
+        ttk.Label(dialog, text='工况名称:').pack(pady=5)
         token_entry = ttk.Entry(dialog, width=30)
         token_entry.pack(pady=5)
         
@@ -446,7 +447,7 @@ class MainWindow(tk.Tk):
         """修改词条"""
         dialog = tk.Toplevel(self)
         dialog.title('修改词条')
-        dialog.geometry('300x120')
+        self._center_dialog(dialog, 300, 120)
         dialog.transient(self)
         dialog.grab_set()
         
@@ -478,7 +479,7 @@ class MainWindow(tk.Tk):
                 self._refresh_ui()
     
     def _create_buttons(self, parent):
-        """创建按钮区（居中）"""
+        """创建按钮区"""
         btn_container = ttk.Frame(parent)
         btn_container.pack()
         
@@ -491,9 +492,9 @@ class MainWindow(tk.Tk):
         fixed = config.get('fixed_fields', {})
         comm = config.get('comm_info', {})
         
-        chinese_modules = [m for m in config.get('personnel_modules', []) if m.get('category') == 'chinese' and not m.get('is_leader')]
-        local_modules = [m for m in config.get('personnel_modules', []) if m.get('category') == 'local' and not m.get('is_leader')]
-        leader_modules = [m for m in config.get('personnel_modules', []) if m.get('is_leader')]
+        chinese_modules = [m for m in config.get('personnel_modules', []) if m.get('category') == 'chinese' and not m.get('is_other')]
+        local_modules = [m for m in config.get('personnel_modules', []) if m.get('category') == 'local' and not m.get('is_other')]
+        other_modules = [m for m in config.get('personnel_modules', []) if m.get('is_other')]
         
         chinese_total = sum(m.get('count', 0) for m in chinese_modules)
         local_total = sum(m.get('count', 0) for m in local_modules)
@@ -501,10 +502,7 @@ class MainWindow(tk.Tk):
         chinese_detail = '，'.join([f"{m['label']}{m['count']}人" for m in chinese_modules])
         local_detail = '；'.join([f"{m['label']}{m['count']}人" for m in local_modules])
         
-        leader_notes = []
-        for leader in leader_modules:
-            if leader.get('action'):
-                leader_notes.append(f"{leader.get('title', '')}{leader.get('name', '')}{leader['action']}")
+        other_notes = [m['label'] for m in other_modules]
         
         today_work = self.today_work_text.get('1.0', 'end-1c').strip()
         next_work = self.next_work_text.get('1.0', 'end-1c').strip()
@@ -513,7 +511,7 @@ class MainWindow(tk.Tk):
         report = f"""1.单位名称：{fixed.get('unit_name', '')}
 2.日期：{datetime.now().strftime('%Y.%m.%d')}
 3.所在区域：{fixed.get('region', '')}
-4.人员情况：中方人员{chinese_total}人（其中{chinese_detail}）{fixed.get('well_name', '')}当地雇员{local_total}人；{local_detail}。{"，".join(leader_notes)}。
+4.人员情况：中方人员{chinese_total}人（其中{chinese_detail}）{fixed.get('well_name', '')}当地雇员{local_total}人；{local_detail}。{"，".join(other_notes)}。
 5.生活物资储备天数：{fixed.get('supply_days', 30)}天；井场柴油{fixed.get('diesel_volume', 50)}方，可用{fixed.get('diesel_days', 15)}天。
 6.井号：{fixed.get('well_name', '')} 设计井深：{fixed.get('design_depth', 0)} m
 7.今日工况：{today_work}。
@@ -531,7 +529,7 @@ class MainWindow(tk.Tk):
         self._show_preview_window(report)
     
     def _show_preview_window(self, report_text):
-        """显示预览窗口"""
+        """显示预览窗口（居中）"""
         preview = tk.Toplevel(self)
         preview.title('📄 报表预览')
         
@@ -572,10 +570,10 @@ class MainWindow(tk.Tk):
             f.write(content)
     
     def _show_settings(self):
-        """显示设置"""
+        """显示设置（居中）"""
         settings = tk.Toplevel(self)
         settings.title('⚙️ 设置')
-        settings.geometry('500x450')
+        self._center_dialog(settings, 500, 450)
         settings.transient(self)
         
         ttk.Label(settings, text='配置管理', font=('Microsoft YaHei UI', 12, 'bold')).pack(pady=10)
