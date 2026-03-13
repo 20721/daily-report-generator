@@ -1,4 +1,4 @@
-"""初始化向导窗口 - 3 页可切换"""
+"""初始化向导窗口 - 3 页可切换（修复版）"""
 import tkinter as tk
 from tkinter import ttk, messagebox
 from typing import Dict, List, Callable, Optional
@@ -19,7 +19,7 @@ class WizardWindow(tk.Toplevel):
         self.grab_set()
         
         # 人员模块临时存储
-        self.personnel_modules = []
+        self.personnel_entries = []
         
         self._create_ui()
         self._show_page(0)
@@ -60,6 +60,7 @@ class WizardWindow(tk.Toplevel):
         """清除当前页内容"""
         for widget in self.page_frame.winfo_children():
             widget.destroy()
+        self.personnel_entries = []
     
     def _show_page(self, page_num: int):
         """显示指定页"""
@@ -112,29 +113,13 @@ class WizardWindow(tk.Toplevel):
         ttk.Label(form_frame, text='m').grid(row=3, column=2, sticky='w', padx=5)
     
     def _show_personnel_page(self):
-        """第 2 页：人员配置"""
+        """第 2 页：人员配置（简化版 - 不使用滚动区域）"""
         ttk.Label(self.page_frame, text='人员配置', 
                  font=('Microsoft YaHei UI', 12, 'bold')).pack(anchor='w', pady=10)
         
-        # 人员列表
+        # 人员列表 - 简化实现
         list_frame = ttk.LabelFrame(self.page_frame, text='人员模块列表', padding=10)
         list_frame.pack(fill='both', expand=True, pady=5)
-        
-        # 创建滚动区域
-        canvas = tk.Canvas(list_frame, height=200)
-        scrollbar = ttk.Scrollbar(list_frame, orient='vertical', command=canvas.yview)
-        scrollable_frame = ttk.Frame(canvas)
-        
-        scrollable_frame.bind(
-            '<Configure>',
-            lambda e: canvas.configure(scrollregion=canvas.bbox('all'))
-        )
-        
-        canvas.create_window((0, 0), window=scrollable_frame, anchor='nw')
-        canvas.configure(yscrollcommand=scrollbar.set)
-        
-        canvas.pack(side='left', fill='both', expand=True)
-        scrollbar.pack(side='right', fill='y')
         
         # 默认人员模块
         default_modules = [
@@ -146,9 +131,8 @@ class WizardWindow(tk.Toplevel):
             ('安保', 'local')
         ]
         
-        self.personnel_entries = []
         for i, (label, category) in enumerate(default_modules):
-            frame = ttk.Frame(scrollable_frame)
+            frame = ttk.Frame(list_frame)
             frame.pack(fill='x', pady=2)
             
             ttk.Label(frame, text=label, width=15).pack(side='left', padx=5)
@@ -168,55 +152,6 @@ class WizardWindow(tk.Toplevel):
                 'category': category,
                 'count_var': count_var
             })
-        
-        # 添加按钮
-        ttk.Button(self.page_frame, text='+ 添加人员模块', 
-                  command=self._add_personnel_module).pack(pady=5)
-    
-    def _add_personnel_module(self):
-        """添加人员模块"""
-        # 简化实现：添加一个默认模块
-        dialog = tk.Toplevel(self)
-        dialog.title('添加人员模块')
-        dialog.geometry('400x200')
-        dialog.transient(self)
-        dialog.grab_set()
-        
-        ttk.Label(dialog, text='模块标签:').pack(pady=5)
-        label_entry = ttk.Entry(dialog, width=40)
-        label_entry.pack(pady=5)
-        
-        ttk.Label(dialog, text='类别:').pack(pady=5)
-        category_var = tk.StringVar(value='chinese')
-        ttk.Radiobutton(dialog, text='中方人员', variable=category_var, value='chinese').pack()
-        ttk.Radiobutton(dialog, text='当地雇员', variable=category_var, value='local').pack()
-        
-        def on_add():
-            label = label_entry.get().strip()
-            if label:
-                frame = ttk.Frame(self.page_frame.winfo_children()[0].winfo_children()[0])
-                frame.pack(fill='x', pady=2)
-                
-                ttk.Label(frame, text=label, width=15).pack(side='left', padx=5)
-                
-                count_var = tk.StringVar(value='1')
-                count_combo = ttk.Combobox(frame, textvariable=count_var, width=5, state='readonly')
-                count_combo['values'] = [str(i) for i in range(1, 21)]
-                count_combo.set('1')
-                count_combo.pack(side='left', padx=5)
-                
-                ttk.Label(frame, text='人').pack(side='left', padx=2)
-                ttk.Label(frame, text=f'({category_var.get()})', width=10).pack(side='left', padx=5)
-                
-                self.personnel_entries.append({
-                    'label': label,
-                    'category': category_var.get(),
-                    'count_var': count_var
-                })
-                
-                dialog.destroy()
-        
-        ttk.Button(dialog, text='确定', command=on_add).pack(pady=10)
     
     def _show_comm_page(self):
         """第 3 页：通讯信息"""
