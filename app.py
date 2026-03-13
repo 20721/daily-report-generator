@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""每日报表生成器 v6.0.3 - 带详细日志"""
+"""每日报表生成器 v6.0.6 - 修复窗口显示问题"""
 import sys
 import os
 import logging
@@ -32,7 +32,7 @@ from report_app.ui.main_window_tk import MainWindow
 
 
 def main():
-    """主函数 - 带详细日志"""
+    """主函数 - 修复窗口显示"""
     logger.info('='*60)
     logger.info('程序启动')
     logger.info(f'Python 版本：{sys.version}')
@@ -41,14 +41,16 @@ def main():
     logger.info(f'冻结状态：{getattr(sys, "frozen", False)}')
     
     try:
-        # 创建根窗口
+        # 创建根窗口（不隐藏！）
         logger.info('创建根窗口...')
         root = Tk()
         logger.info(f'根窗口创建成功：{root}')
         logger.info(f'根窗口句柄：{root.winfo_id() if root.winfo_exists() else "N/A"}')
         
-        root.withdraw()
-        logger.info('根窗口已隐藏')
+        # 不隐藏根窗口，而是设置透明或最小化
+        # root.withdraw()  # ← 不要隐藏！
+        root.attributes('-alpha', 0)  # 设置为完全透明
+        logger.info('根窗口已设置为透明')
         
         # 加载配置
         logger.info('加载配置...')
@@ -64,6 +66,7 @@ def main():
             # 显示向导并等待完成
             wizard = WizardWindow(root, config_service, lambda: None)
             logger.info(f'向导窗口创建：{wizard}')
+            logger.info(f'向导窗口句柄：{wizard.winfo_id() if wizard.winfo_exists() else "N/A"}')
             logger.info('等待向导窗口关闭...')
             wizard.wait_window()
             logger.info('向导窗口已关闭')
