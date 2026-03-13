@@ -473,7 +473,7 @@ class MainWindow(tk.Tk):
     
     def _delete_token(self, token):
         """删除词条"""
-        result = messagebox.askyesno('确认', f'确定删除词条"{token}"吗？'):
+        result = messagebox.askyesno('确认', f'确定删除词条"{token}"吗？')
             tokens = self.config_service.config['work_tokens']['all_tokens']
             if token in tokens:
                 tokens.remove(token)
