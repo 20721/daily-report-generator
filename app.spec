@@ -1,10 +1,11 @@
 # -*- mode: python ; coding: utf-8 -*-
 
+from PyInstaller.utils.hooks import collect_submodules
 import os
 
 block_cipher = None
 
-# 明确列出所有需要的隐藏导入
+# 方法 1：明确列出所有需要的隐藏导入（解决模块导入问题）
 hiddenimports = [
     'report_app',
     'report_app.services',
@@ -23,11 +24,35 @@ hiddenimports = [
     'logging',
 ]
 
+# 方法 2：收集所有子模块（确保不遗漏）
+hiddenimports += collect_submodules("report_app")
+
+# 收集数据文件和二进制文件（使用 collect_all 的变通方法）
+# 由于 collect_all 在 Analysis 前可能失败，我们手动收集
+datas = []
+binaries = []
+
+# 收集 tkinter 数据
+try:
+    from PyInstaller.utils.hooks import collect_data_files, collect_dynamic_libs
+    datas += collect_data_files('tkinter')
+    datas += collect_data_files('PIL')
+    binaries += collect_dynamic_libs('tkinter')
+except:
+    pass
+
+# 图标路径
+icon_path = 'resources/app_icon.ico'
+if os.path.exists(icon_path):
+    icon_list = [icon_path]
+else:
+    icon_list = []
+
 a = Analysis(
     ['app.py'],
     pathex=['.', 'report_app', 'report_app/ui', 'report_app/services'],
-    binaries=[],
-    datas=[],
+    binaries=binaries,
+    datas=datas,
     hiddenimports=hiddenimports,
     hookspath=[],
     hooksconfig={},
@@ -60,5 +85,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=[],
+    icon=icon_list,
 )
