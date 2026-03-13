@@ -1,43 +1,33 @@
 # -*- mode: python ; coding: utf-8 -*-
 
-from PyInstaller.utils.hooks import collect_all, collect_submodules
 import os
 
 block_cipher = None
 
-# 收集 report_app 所有子模块
-datas = []
-binaries = []
-hiddenimports = []
-
-# 关键修复：使用 collect_all 收集包的所有内容
-try:
-    tmp = collect_all("report_app")
-    datas += tmp[0]
-    binaries += tmp[1]
-    hiddenimports += tmp[2]
-except Exception as e:
-    print(f"Warning: collect_all failed: {e}")
-
-# 收集所有子模块（确保不遗漏）
-hiddenimports += collect_submodules("report_app")
-
-# 添加其他依赖
-hiddenimports += ['pyperclip', 'json', 'os', 'sys', 'pathlib', 'datetime', 'tkinter']
-
-# 图标路径
-icon_path = 'resources/app_icon.ico'
-if os.path.exists(icon_path):
-    icon_list = [icon_path]
-else:
-    icon_list = []
-
+# 关键修复：使用 Analysis 的 pathex 参数，让 PyInstaller 能找到 report_app
+# 并在 Analysis 之后收集模块
 a = Analysis(
     ['app.py'],
     pathex=['.', 'report_app', 'report_app/ui', 'report_app/services'],
-    binaries=binaries,
-    datas=datas,
-    hiddenimports=hiddenimports,
+    binaries=[],
+    datas=[],
+    hiddenimports=[
+        'report_app',
+        'report_app.services',
+        'report_app.services.config_service',
+        'report_app.ui',
+        'report_app.ui.main_window_tk',
+        'report_app.ui.wizard_window_tk',
+        'pyperclip',
+        'tkinter',
+        'tkinter.ttk',
+        'tkinter.messagebox',
+        'tkinter.filedialog',
+        'datetime',
+        'pathlib',
+        'json',
+        'logging',
+    ],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
@@ -47,6 +37,22 @@ a = Analysis(
     cipher=block_cipher,
     noarchive=False,
 )
+
+# 在 Analysis 之后，手动添加 report_app 的所有子模块
+# 因为此时 report_app 已经在 Python 路径中了
+try:
+    from PyInstaller.utils.hooks import collect_submodules
+    a.hiddenimports += collect_submodules("report_app")
+    print(f"✅ Added {len(collect_submodules('report_app'))} submodules from report_app")
+except Exception as e:
+    print(f"Warning: Could not collect submodules: {e}")
+
+# 图标路径
+icon_path = 'resources/app_icon.ico'
+if os.path.exists(icon_path):
+    icon_list = [icon_path]
+else:
+    icon_list = []
 
 pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
 
