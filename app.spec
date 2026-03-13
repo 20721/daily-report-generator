@@ -1,12 +1,6 @@
 # -*- mode: python ; coding: utf-8 -*-
 
 import os
-import sys
-
-# 关键修复：在 spec 文件级别添加路径
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'report_app'))
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'report_app', 'ui'))
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'report_app', 'services'))
 
 block_cipher = None
 
