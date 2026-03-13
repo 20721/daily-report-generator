@@ -1,4 +1,4 @@
-"""主窗口 - 精简布局 + 实时预览"""
+"""主窗口 - 精简布局 + 实时预览（修复工况词条）"""
 import tkinter as tk
 from tkinter import ttk, messagebox
 from datetime import datetime
@@ -35,6 +35,17 @@ class MainWindow(tk.Tk):
         success, message = self.config_service.load()
         if not success:
             messagebox.showwarning('警告', message)
+        
+        # 确保工况词条有默认值
+        if not self.config_service.config.get('work_tokens', {}).get('all_tokens'):
+            self.config_service.config['work_tokens'] = {
+                'all_tokens': [
+                    '下套管', '循环', '固井', '候凝', '安装套管头', '安装 BOP', '试压',
+                    'BOP 试压', '组合二开钻具', '下钻', '钻塞', '二开钻进'
+                ],
+                'today': [],
+                'next': []
+            }
     
     def _create_ui(self):
         """创建 UI"""
@@ -149,7 +160,14 @@ class MainWindow(tk.Tk):
         tokens_frame = ttk.LabelFrame(parent, text='🏷 工况词条（点击添加到当前焦点）', padding=5)
         tokens_frame.pack(fill='x', pady=5)
         
+        # 读取工况词条（确保有默认值）
         tokens = self.config_service.config.get('work_tokens', {}).get('all_tokens', [])
+        if not tokens:
+            tokens = [
+                '下套管', '循环', '固井', '候凝', '安装套管头', '安装 BOP', '试压',
+                'BOP 试压', '组合二开钻具', '下钻', '钻塞', '二开钻进'
+            ]
+        
         for token in tokens:
             btn = ttk.Button(tokens_frame, text=token, 
                            command=lambda t=token: self._add_token(t))
@@ -250,5 +268,52 @@ class MainWindow(tk.Tk):
         ttk.Button(btn_frame, text='关闭', command=preview.destroy).pack(side='right', padx=5)
     
     def _show_settings(self):
-        """显示设置（简化版）"""
-        messagebox.showinfo('设置', '设置功能开发中...', parent=self)
+        """显示设置"""
+        # 创建设置对话框
+        settings = tk.Toplevel(self)
+        settings.title('⚙️ 设置')
+        settings.geometry('500x400')
+        settings.transient(self)
+        
+        # 说明
+        ttk.Label(settings, text='配置信息（只读）', 
+                 font=('Microsoft YaHei UI', 12, 'bold')).pack(pady=10)
+        
+        # 配置文本框
+        config_text = tk.Text(settings, wrap='word', height=15)
+        config_text.pack(fill='both', expand=True, padx=10, pady=5)
+        
+        # 显示配置
+        import json
+        config_str = json.dumps(self.config_service.config, ensure_ascii=False, indent=2)
+        config_text.insert('1.0', config_str)
+        config_text.config(state='disabled')
+        
+        # 按钮
+        btn_frame = ttk.Frame(settings)
+        btn_frame.pack(fill='x', pady=5)
+        
+        ttk.Button(btn_frame, text='关闭', command=settings.destroy).pack(side='right', padx=5)
+        
+        ttk.Button(btn_frame, text='重新运行向导', 
+                  command=lambda: self._run_wizard(settings)).pack(side='left', padx=5)
+    
+    def _run_wizard(self, parent):
+        """重新运行向导"""
+        from report_app.ui.wizard_window_tk import WizardWindow
+        
+        if messagebox.askyesno('确认', '重新运行向导将覆盖当前配置，确定吗？', parent=parent):
+            parent.destroy()
+            # 创建隐藏根窗口
+            root = tk.Tk()
+            root.withdraw()
+            
+            def on_complete():
+                root.destroy()
+                self.destroy()
+                # 重新启动
+                app = MainWindow()
+                app.mainloop()
+            
+            wizard = WizardWindow(root, self.config_service, on_complete)
+            root.mainloop()
