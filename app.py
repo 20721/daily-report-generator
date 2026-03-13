@@ -1,10 +1,23 @@
 #!/usr/bin/env python3
-"""每日报表生成器 v6.1.4 - 修复模块导入路径"""
+"""每日报表生成器 v6.1.15 - 终极修复版"""
 import sys
 import os
 import logging
 from pathlib import Path
-from tkinter import Tk
+
+# 关键修复：在导入任何自定义模块之前设置路径
+if getattr(sys, 'frozen', False):
+    # 打包后的环境
+    APP_DIR = Path(os.path.dirname(sys.executable))
+    # 添加多个可能的路径
+    sys.path.insert(0, str(APP_DIR))
+    sys.path.insert(0, str(APP_DIR / 'report_app'))
+    sys.path.insert(0, str(APP_DIR / 'report_app' / 'ui'))
+    sys.path.insert(0, str(APP_DIR / 'report_app' / 'services'))
+else:
+    # 开发环境
+    APP_DIR = Path(os.path.dirname(os.path.abspath(__file__)))
+    sys.path.insert(0, str(APP_DIR))
 
 # 设置日志
 log_file = 'DailyReport.log'
@@ -18,18 +31,23 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# 获取程序目录
-if getattr(sys, 'frozen', False):
-    APP_DIR = Path(os.path.dirname(sys.executable))
-else:
-    APP_DIR = Path(os.path.dirname(os.path.abspath(__file__)))
+# 测试导入
+try:
+    logger.info("开始导入模块...")
+    from report_app.services.config_service import ConfigService
+    logger.info("✅ ConfigService 导入成功")
+    from report_app.ui.wizard_window_tk import WizardWindow
+    logger.info("✅ WizardWindow 导入成功")
+    from report_app.ui.main_window_tk import MainWindow
+    logger.info("✅ MainWindow 导入成功")
+    logger.info("所有模块导入成功！")
+except Exception as e:
+    logger.error(f"❌ 模块导入失败：{type(e).__name__}: {e}")
+    import traceback
+    logger.error(traceback.format_exc())
+    raise
 
-# 关键修复：添加项目根目录到 Python 搜索路径
-sys.path.insert(0, str(APP_DIR))
-
-from report_app.services.config_service import ConfigService
-from report_app.ui.wizard_window_tk import WizardWindow
-from report_app.ui.main_window_tk import MainWindow
+from tkinter import Tk
 
 
 def main():
@@ -38,8 +56,7 @@ def main():
     logger.info('程序启动')
     logger.info(f'Python 版本：{sys.version}')
     logger.info(f'程序目录：{APP_DIR}')
-    logger.info(f'工作目录：{os.getcwd()}')
-    logger.info(f'搜索路径：{sys.path[:3]}...')
+    logger.info(f'搜索路径：{sys.path[:5]}...')
     
     try:
         # 创建根窗口
