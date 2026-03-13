@@ -315,7 +315,7 @@ class MainWindow(tk.Tk):
     
     def _delete_other_person(self, module):
         """删除其他人员"""
-        if messagebox.askyesno('确认', f'确定删除"{module.get("label", "")}"吗？'):
+        result = messagebox.askyesno('确认', f'确定删除"{module.get("label", "")}"吗？'):
             self.config_service.config['personnel_modules'] = [
                 m for m in self.config_service.config['personnel_modules']
                 if m.get('id') != module.get('id')
@@ -471,7 +471,7 @@ class MainWindow(tk.Tk):
     
     def _delete_token(self, token):
         """删除词条"""
-        if messagebox.askyesno('确认', f'确定删除词条"{token}"吗？'):
+        result = messagebox.askyesno('确认', f'确定删除词条"{token}"吗？'):
             tokens = self.config_service.config['work_tokens']['all_tokens']
             if token in tokens:
                 tokens.remove(token)
@@ -603,7 +603,7 @@ class MainWindow(tk.Tk):
             settings.destroy()
         
         def on_wizard():
-            if messagebox.askyesno('确认', '重新运行向导将覆盖当前配置，确定吗？', parent=settings):
+            result = messagebox.askyesno('确认', '重新运行向导将覆盖当前配置，确定吗？', parent=settings):
                 settings.destroy()
                 self._run_wizard()
         
