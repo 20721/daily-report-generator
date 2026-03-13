@@ -1,10 +1,29 @@
 # -*- mode: python ; coding: utf-8 -*-
 
+import sys
 import os
 
 block_cipher = None
 
-# 关键修复：使用 Analysis 的 pathex 参数，让 PyInstaller 能找到 report_app
+# 关键修复：在 Analysis 之前手动添加路径到 sys.path
+# 这样 PyInstaller 在分析时就能找到 report_app 模块
+sys.path.insert(0, os.path.join(os.getcwd(), 'report_app'))
+sys.path.insert(0, os.path.join(os.getcwd(), 'report_app', 'ui'))
+sys.path.insert(0, os.path.join(os.getcwd(), 'report_app', 'services'))
+
+# 现在手动导入来验证模块可访问
+try:
+    import report_app
+    print("Successfully imported report_app")
+    import report_app.ui
+    print("Successfully imported report_app.ui")
+    import report_app.ui.main_window_tk
+    print("Successfully imported report_app.ui.main_window_tk")
+    import report_app.ui.wizard_window_tk
+    print("Successfully imported report_app.ui.wizard_window_tk")
+except Exception as e:
+    print("Warning: Could not import report_app modules: " + str(e))
+
 a = Analysis(
     ['app.py'],
     pathex=['.', 'report_app', 'report_app/ui', 'report_app/services'],
@@ -36,14 +55,6 @@ a = Analysis(
     cipher=block_cipher,
     noarchive=False,
 )
-
-# 在 Analysis 之后，手动添加 report_app 的所有子模块
-try:
-    from PyInstaller.utils.hooks import collect_submodules
-    a.hiddenimports += collect_submodules("report_app")
-    print("Added submodules from report_app")
-except Exception as e:
-    print("Warning: Could not collect submodules: " + str(e))
 
 # 图标路径
 icon_path = 'resources/app_icon.ico'
