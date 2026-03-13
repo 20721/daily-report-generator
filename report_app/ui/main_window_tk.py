@@ -608,7 +608,7 @@ class MainWindow(tk.Tk):
             settings.destroy()
         
         def on_wizard():
-            result = messagebox.askyesno('确认', '重新运行向导将覆盖当前配置，确定吗？', parent=settings):
+            result = messagebox.askyesno('确认', '重新运行向导将覆盖当前配置，确定吗？', parent=settings)
                 settings.destroy()
                 self._run_wizard()
         
