@@ -476,7 +476,10 @@ class MainWindow(tk.Tk):
         result = messagebox.askyesno('确认', f'确定删除词条"{token}"吗？')
         
         if result:
-            self.config_service.config['personnel_modules'] = [
+            # 从工况词条列表中删除
+            tokens = self.config_service.config.get('work_tokens', {}).get('all_tokens', [])
+            if token in tokens:
+                tokens.remove(token)
                 self._auto_save()
                 self._refresh_ui()
     
