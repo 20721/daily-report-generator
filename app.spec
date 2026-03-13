@@ -1,31 +1,29 @@
 # -*- mode: python ; coding: utf-8 -*-
 
-from PyInstaller.utils.hooks import collect_submodules
+from PyInstaller.utils.hooks import collect_all, collect_submodules
 import os
 
 block_cipher = None
 
-# 明确列出所有需要的隐藏导入
-hiddenimports = [
-    'report_app',
-    'report_app.services',
-    'report_app.services.config_service',
-    'report_app.ui',
-    'report_app.ui.main_window_tk',
-    'report_app.ui.wizard_window_tk',
-    'pyperclip',
-    'tkinter',
-    'tkinter.ttk',
-    'tkinter.messagebox',
-    'tkinter.filedialog',
-    'datetime',
-    'pathlib',
-    'json',
-    'logging',
-]
+# 收集 report_app 所有子模块
+datas = []
+binaries = []
+hiddenimports = []
 
-# 收集所有子模块
+# 关键修复：使用 collect_all 收集包的所有内容
+try:
+    tmp = collect_all("report_app")
+    datas += tmp[0]
+    binaries += tmp[1]
+    hiddenimports += tmp[2]
+except Exception as e:
+    print(f"Warning: collect_all failed: {e}")
+
+# 收集所有子模块（确保不遗漏）
 hiddenimports += collect_submodules("report_app")
+
+# 添加其他依赖
+hiddenimports += ['pyperclip', 'json', 'os', 'sys', 'pathlib', 'datetime', 'tkinter']
 
 # 图标路径
 icon_path = 'resources/app_icon.ico'
@@ -37,8 +35,8 @@ else:
 a = Analysis(
     ['app.py'],
     pathex=['.', 'report_app', 'report_app/ui', 'report_app/services'],
-    binaries=[],
-    datas=[],
+    binaries=binaries,
+    datas=datas,
     hiddenimports=hiddenimports,
     hookspath=[],
     hooksconfig={},
