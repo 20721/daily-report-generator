@@ -315,7 +315,7 @@ class MainWindow(tk.Tk):
     
     def _delete_other_person(self, module):
         """删除其他人员"""
-        result = messagebox.askyesno('确认', f'确定删除"{module.get("label", "")}"吗？')
+        result = messagebox.askyesno('确认', f'确定删除"{module.get("label", "")}"吗？'):
             self.config_service.config['personnel_modules'] = [
                 m for m in self.config_service.config['personnel_modules']
                 if m.get('id') != module.get('id')
