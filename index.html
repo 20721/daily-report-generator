@@ -113,28 +113,43 @@
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 12px;
       align-items: start;
+      justify-items: center;
     }
     .staff-column {
+      width: 49%;
+      max-width: 100%;
+      min-width: 0;
+      flex-shrink: 1;
       border: 1px solid var(--line);
       border-radius: 12px;
       background: #fbfdff;
       padding: 12px;
+      box-sizing: border-box;
       height: 100%;
       display: grid;
       gap: 10px;
       align-content: start;
+      overflow: hidden;
+      justify-self: center;
     }
     .staff-column-head {
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 8px;
       margin-bottom: 10px;
+      box-sizing: border-box;
+      flex-wrap: wrap;
     }
     .staff-column-head h3 {
       margin: 0;
       font-size: 15px;
       color: #0f172a;
+      min-width: 0;
+      word-break: break-word;
     }
     .staff-column-sub {
       font-size: 12px;
@@ -142,10 +157,14 @@
       margin-top: 2px;
     }
     .staff-column-list {
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
       display: grid;
       gap: 10px;
       align-content: start;
       min-height: 24px;
+      box-sizing: border-box;
     }
     .staff-column-footer {
       margin-top: auto;
@@ -158,16 +177,22 @@
       align-items: end;
     }
     .staff-row-grid {
+      width: 94%;
+      max-width: 100%;
+      min-width: 0;
       display: grid;
-      grid-template-columns: 148px 96px 72px 64px;
+      grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr) minmax(0, 0.8fr) minmax(56px, 0.42fr);
       gap: 8px;
       align-items: end;
-      justify-content: start;
+      justify-content: stretch;
+      box-sizing: border-box;
+      flex-shrink: 1;
+      margin: 0 auto;
     }
-    .staff-row-grid .field { min-width: 0; }
+    .staff-row-grid .field { min-width: 0; width: 100%; max-width: 100%; flex-shrink: 1; }
     .staff-row-grid input,
-    .staff-row-grid select { width: 100%; }
-    .staff-row-grid button { width: 64px; }
+    .staff-row-grid select { width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box; flex-shrink: 1; }
+    .staff-row-grid button { width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box; flex-shrink: 1; }
     .mini-stat-grid {
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -354,11 +379,23 @@
       .sticky-panel { position: static; }
       .mini-stat-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     }
+    @media (max-width: 980px) {
+      .staff-columns { gap: 10px; }
+      .staff-column { width: 100%; }
+      .staff-row-grid {
+        width: 100%;
+        grid-template-columns: minmax(0, 1.45fr) minmax(0, 0.95fr) minmax(0, 0.75fr) minmax(52px, 0.38fr);
+        gap: 6px;
+      }
+    }
     @media (max-width: 760px) {
       body { padding: 12px; }
       .hero { padding: 18px; }
       .panel { padding: 14px; }
       .grid, .grid-3, .mini-stat-grid, .title-grid, .staff-row-grid, .supplies-row { grid-template-columns: 1fr; }
+      .staff-columns { grid-template-columns: 1fr; }
+      .staff-column,
+      .staff-row-grid { width: 100%; max-width: 100%; }
       .actions button, .custom-row button, .inline-actions button { width: 100%; }
     }
   </style>
