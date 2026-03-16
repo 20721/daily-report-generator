@@ -109,14 +109,28 @@
       align-items: end;
     }
     .staff-columns {
+      position: relative;
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 12px;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 16px;
       align-items: start;
-      justify-items: center;
+      justify-content: stretch;
+    }
+    .staff-columns::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 50%;
+      width: 4px;
+      transform: translateX(-50%);
+      border-radius: 999px;
+      background: linear-gradient(180deg, #8b5cf6 0%, #7c3aed 100%);
+      opacity: 0.9;
+      pointer-events: none;
     }
     .staff-column {
-      width: 49%;
+      width: 100%;
       max-width: 100%;
       min-width: 0;
       flex-shrink: 1;
@@ -130,7 +144,15 @@
       gap: 10px;
       align-content: start;
       overflow: hidden;
-      justify-self: center;
+      justify-self: stretch;
+    }
+    .staff-column:nth-child(1) {
+      grid-column: 1;
+      padding-right: 14px;
+    }
+    .staff-column:nth-child(2) {
+      grid-column: 2;
+      padding-left: 14px;
     }
     .staff-column-head {
       width: 100%;
@@ -236,9 +258,28 @@
       align-items: center;
       gap: 6px;
     }
+    .pill {
+      position: relative;
+      padding-right: 28px;
+    }
     .tag:hover, .pill:hover { transform: translateY(-1px); }
     .tag.active { background: var(--primary); color: #fff; border-color: var(--primary); }
-    .pill .remove, .mini-remove { font-weight: 700; cursor: pointer; }
+    .pill .remove, .mini-remove {
+      position: absolute;
+      top: -5px;
+      right: -4px;
+      width: 18px;
+      height: 18px;
+      border-radius: 999px;
+      background: var(--danger);
+      color: #fff;
+      font-size: 12px;
+      line-height: 18px;
+      text-align: center;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(220, 38, 38, 0.18);
+    }
     .picker-input {
       background: #fff;
       cursor: pointer;
@@ -394,6 +435,7 @@
       .panel { padding: 14px; }
       .grid, .grid-3, .mini-stat-grid, .title-grid, .staff-row-grid, .supplies-row { grid-template-columns: 1fr; }
       .staff-columns { grid-template-columns: 1fr; }
+      .staff-column:nth-child(2) { grid-column: auto; }
       .staff-column,
       .staff-row-grid { width: 100%; max-width: 100%; }
       .actions button, .custom-row button, .inline-actions button { width: 100%; }
@@ -562,6 +604,7 @@
     const STORAGE_KEY = 'daily_report_generator_web_v2';
     const HISTORY_KEY = 'daily_report_generator_history_v1';
     const CATEGORY_OPTIONS = ['中方人员', '当地雇员', '自定义'];
+    const STAFF_CATEGORY_OPTIONS = ['中方', '外籍', '自定义'];
     const LEGACY_KEYS = ['daily_report_generator_web_v1'];
 
     const defaultData = {
@@ -583,14 +626,14 @@
         { id: uid(), title: '基地经理', name: '赵铁寨', category: '中方人员', resident: true }
       ],
       staffEntries: [
-        { id: uid(), name: '919 队', category: '中方人员', count: 14 },
-        { id: uid(), name: '厨师', category: '中方人员', count: 3 },
-        { id: uid(), name: '大夫', category: '中方人员', count: 2 },
-        { id: uid(), name: '顶驱', category: '中方人员', count: 1 },
-        { id: uid(), name: '基地经理', category: '中方人员', count: 1 },
-        { id: uid(), name: '当地雇员', category: '当地雇员', count: 29 },
-        { id: uid(), name: '士兵', category: '当地雇员', count: 8 },
-        { id: uid(), name: '安保', category: '当地雇员', count: 13 }
+        { id: uid(), name: '919 队', category: '中方', count: 14 },
+        { id: uid(), name: '厨师', category: '中方', count: 3 },
+        { id: uid(), name: '大夫', category: '中方', count: 2 },
+        { id: uid(), name: '顶驱', category: '中方', count: 1 },
+        { id: uid(), name: '基地经理', category: '中方', count: 1 },
+        { id: uid(), name: '当地雇员', category: '外籍', count: 29 },
+        { id: uid(), name: '士兵', category: '外籍', count: 8 },
+        { id: uid(), name: '安保', category: '外籍', count: 13 }
       ],
       workConditions: [
         '一开验收', '整改', '组合 BHA', '技术交底', '一开钻进',
@@ -636,9 +679,9 @@
 
       const groupMap = saved.staffGroups || {};
       const categoryMap = {
-        '当地雇员': '当地雇员',
-        '士兵': '当地雇员',
-        '安保': '当地雇员'
+        '当地雇员': '外籍',
+        '士兵': '外籍',
+        '安保': '外籍'
       };
       migrated.staffEntries = Object.entries(groupMap).map(([name, count]) => ({
         id: uid(),
@@ -646,6 +689,7 @@
         category: categoryMap[name] || '中方',
         count: Number(count) || 0
       }));
+      if (!migrated.staffEntries.length) migrated.staffEntries = deepClone(defaultData.staffEntries);
       if (!migrated.staffEntries.length) migrated.staffEntries = deepClone(defaultData.staffEntries);
       migrated.selectedToday = Array.isArray(saved.selectedToday) ? saved.selectedToday : [];
       migrated.selectedNext = Array.isArray(saved.selectedNext) ? saved.selectedNext : [];
@@ -683,12 +727,26 @@
 
     function normalizeCategory(value, fallbackName = '') {
       const raw = String(value || '').trim();
-      if (CATEGORY_OPTIONS.includes(raw)) return raw;
-      if (['中方'].includes(raw)) return '中方人员';
-      if (['外籍', '当地雇员', '士兵', '安保', '其他'].includes(raw)) return '当地雇员';
+      if (raw === '自定义') return '自定义';
+      if (['中方', '中方人员'].includes(raw)) return '中方';
+      if (['外籍', '外籍人员', '当地雇员', '士兵', '安保', '其他'].includes(raw)) return '外籍';
       const name = String(fallbackName || '').trim();
-      if (['当地雇员', '士兵', '安保'].includes(name)) return '当地雇员';
-      return '中方人员';
+      if (['当地雇员', '士兵', '安保'].includes(name)) return '外籍';
+      return '中方';
+    }
+
+    function toStaffStorageCategory(value) {
+      const normalized = normalizeCategory(value);
+      if (normalized === '中方') return '中方';
+      if (normalized === '外籍') return '外籍';
+      return '自定义';
+    }
+
+    function toTitleStorageCategory(value) {
+      const normalized = normalizeCategory(value);
+      if (normalized === '中方') return '中方人员';
+      if (normalized === '外籍') return '当地雇员';
+      return '自定义';
     }
 
     function normalizeTitleEntries(entries) {
@@ -699,7 +757,7 @@
         id: item.id || uid(),
         title: String(item.title || '').trim() || '头衔',
         name: String(item.name || '').trim(),
-        category: normalizeCategory(item.category, item.title),
+        category: toTitleStorageCategory(item.category),
         resident: Boolean(item.resident)
       }));
     }
@@ -709,7 +767,7 @@
       return entries.map(item => ({
         id: item.id || uid(),
         name: String(item.name || '').trim() || '未命名分组',
-        category: normalizeCategory(item.category, item.name),
+        category: toStaffStorageCategory(item.category),
         count: Math.max(0, parseInt(item.count || 0, 10) || 0)
       }));
     }
@@ -899,8 +957,8 @@
     function renderStaff() {
       const box = document.getElementById('staffList');
       const grouped = {
-        chinese: state.staffEntries.filter(item => normalizeCategory(item.category, item.name) === '中方人员'),
-        foreign: state.staffEntries.filter(item => normalizeCategory(item.category, item.name) === '当地雇员')
+        chinese: state.staffEntries.filter(item => normalizeCategory(item.category, item.name) === '中方'),
+        foreign: state.staffEntries.filter(item => normalizeCategory(item.category, item.name) === '外籍')
       };
 
       const renderCard = item => `
@@ -913,7 +971,7 @@
             <div class="field">
               <label>类别</label>
               <select data-staff-field="category" data-id="${item.id}">
-                ${CATEGORY_OPTIONS.map(opt => `<option value="${opt}" ${item.category === opt ? 'selected' : ''}>${opt}</option>`).join('')}
+                ${STAFF_CATEGORY_OPTIONS.map(opt => `<option value="${opt}" ${normalizeCategory(item.category, item.name) === opt ? 'selected' : ''}>${opt}</option>`).join('')}
               </select>
             </div>
             <div class="field">
@@ -938,7 +996,7 @@
               ${grouped.chinese.length ? grouped.chinese.map(renderCard).join('') : '<div class="row-card empty">暂无中方分组</div>'}
             </div>
             <div class="staff-column-footer">
-              <button type="button" class="ghost small" data-add-staff-category="中方人员">+ 添加中方分组</button>
+              <button type="button" class="ghost small" data-add-staff-category="中方">+ 添加中方分组</button>
             </div>
           </div>
           <div class="staff-column">
@@ -952,7 +1010,7 @@
               ${grouped.foreign.length ? grouped.foreign.map(renderCard).join('') : '<div class="row-card empty">暂无外籍分组</div>'}
             </div>
             <div class="staff-column-footer">
-              <button type="button" class="ghost small" data-add-staff-category="当地雇员">+ 添加外籍分组</button>
+              <button type="button" class="ghost small" data-add-staff-category="外籍">+ 添加外籍分组</button>
             </div>
           </div>
         </div>
@@ -969,10 +1027,10 @@
         const name = String(item.name || '').trim();
         const category = normalizeCategory(item.category, item.name);
         const count = Math.max(0, parseInt(item.count || 0, 10) || 0);
-        if (category === '中方人员') {
+        if (category === '中方') {
           summary['中方'] += count;
           if (count > 0 && name) detailMap['中方'].set(name, (detailMap['中方'].get(name) || 0) + count);
-        } else if (category === '当地雇员') {
+        } else if (category === '外籍') {
           summary['外籍'] += count;
           if (count > 0 && name) detailMap['外籍'].set(name, (detailMap['外籍'].get(name) || 0) + count);
         } else if (count > 0 && name) {
@@ -985,9 +1043,9 @@
         const name = String(item.name || '').trim();
         const category = normalizeCategory(item.category, item.title);
         const count = (title || name) ? 1 : 0;
-        if (category === '中方人员' && count > 0) {
+        if (category === '中方' && count > 0) {
           summary['中方'] += count;
-        } else if (category === '当地雇员' && count > 0) {
+        } else if (category === '外籍' && count > 0) {
           summary['外籍'] += count;
         }
       });
@@ -1024,9 +1082,9 @@
         return;
       }
       box.innerHTML = list.map((text, index) => `
-        <span class="pill" data-remove-selected="${type}" data-tag="${escapeHtml(text)}">
-          ${index + 1}. ${escapeHtml(text)}
-          <span class="remove">×</span>
+        <span class="pill">
+          <span>${index + 1}. ${escapeHtml(text)}</span>
+          <span class="remove" title="删除" aria-label="删除 ${escapeHtml(text)}" data-remove-selected="${type}" data-tag="${escapeHtml(text)}">×</span>
         </span>
       `).join('');
     }
@@ -1043,7 +1101,7 @@
         selectedBox.innerHTML = '<div class="empty">暂未选择工况</div>';
       } else {
         selectedBox.innerHTML = selected.map((text, index) => `
-          <span class="pill" data-remove-selected="${activeConditionType}" data-tag="${escapeHtml(text)}">${index + 1}. ${escapeHtml(text)}<span class="remove">×</span></span>
+          <span class="pill"><span>${index + 1}. ${escapeHtml(text)}</span><span class="remove" title="删除" aria-label="删除 ${escapeHtml(text)}" data-remove-selected="${activeConditionType}" data-tag="${escapeHtml(text)}">×</span></span>
         `).join('');
       }
       document.getElementById('conditionSearch').value = '';
@@ -1099,8 +1157,8 @@
         .filter(item => item.title || item.name);
 
       const categoryLabelMap = {
-        '中方人员': '中方',
-        '当地雇员': '外籍',
+        '中方': '中方',
+        '外籍': '外籍',
         '自定义': '自定义'
       };
 
@@ -1302,7 +1360,7 @@
     });
 
     document.getElementById('addStaffBtn').addEventListener('click', () => {
-      state.staffEntries.push({ id: uid(), name: '新分组', category: '中方人员', count: 0 });
+      state.staffEntries.push({ id: uid(), name: '新分组', category: '中方', count: 0 });
       saveState(true);
       renderStaff();
       generateReport();
@@ -1346,6 +1404,7 @@
       if (field === 'category') {
         item.category = normalizeCategory(e.target.value, item.name);
         saveState();
+        renderStaff();
         renderStaffStats();
         generateReport();
       }
