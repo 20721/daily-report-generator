@@ -1,0 +1,1232 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>钻井日报生成器</title>
+  <style>
+    :root {
+      --bg: #f3f6fb;
+      --card: #ffffff;
+      --line: #dbe3ef;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --primary: #2563eb;
+      --primary-weak: #e8f0ff;
+      --success: #16a34a;
+      --warning: #f59e0b;
+      --danger: #dc2626;
+      --shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
+      --radius: 16px;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      background: linear-gradient(180deg, #eff5ff 0%, var(--bg) 100%);
+      color: var(--text);
+      padding: 20px;
+    }
+    .app { max-width: 1320px; margin: 0 auto; display: grid; gap: 18px; }
+    .hero {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+      padding: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .hero h1 { margin: 0 0 8px; font-size: 28px; }
+    .hero p { margin: 0; color: var(--muted); font-size: 14px; }
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: #eefbf2;
+      color: #166534;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.25fr) minmax(360px, 0.75fr);
+      gap: 18px;
+      align-items: start;
+    }
+    .stack { display: grid; gap: 18px; }
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 18px;
+    }
+    .sticky-panel { position: sticky; top: 18px; }
+    .panel h2 { margin: 0 0 12px; font-size: 18px; }
+    .sub { margin: -4px 0 14px; color: var(--muted); font-size: 13px; }
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 14px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px 14px; }
+    .field { display: grid; gap: 6px; min-width: 0; }
+    .field label, .section-label {
+      font-size: 13px;
+      color: #374151;
+      font-weight: 600;
+    }
+    input[type="text"], input[type="number"], input[type="date"], select, textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 11px 12px;
+      font-size: 14px;
+      color: var(--text);
+      background: #fff;
+      outline: none;
+      transition: .15s ease;
+    }
+    textarea { resize: vertical; min-height: 76px; }
+    input:focus, textarea:focus, select:focus {
+      border-color: #94b5ff;
+      box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+    }
+    .list-stack { display: grid; gap: 12px; }
+    .row-card {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px;
+      background: #f8fafc;
+    }
+    .row-card + .row-card { margin-top: 0; }
+    .title-grid {
+      display: grid;
+      grid-template-columns: 1.1fr 1fr auto auto;
+      gap: 10px;
+      align-items: end;
+    }
+    .staff-row-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 0.9fr 0.7fr auto;
+      gap: 10px;
+      align-items: end;
+    }
+    .mini-stat-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .stat-card {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fbfdff;
+      padding: 10px 12px;
+    }
+    .stat-card .k { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+    .stat-card .v { font-size: 22px; font-weight: 700; color: #0f172a; }
+    .tags, .selected-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .tags { margin-top: 8px; }
+    .selected-list {
+      min-height: 44px;
+      padding: 10px;
+      border: 1px dashed #bfd4ff;
+      border-radius: 12px;
+      background: #f9fbff;
+      margin-top: 10px;
+      align-content: flex-start;
+    }
+    .tag, .pill {
+      border: 1px solid #bfd4ff;
+      color: var(--primary);
+      background: var(--primary-weak);
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 13px;
+      cursor: pointer;
+      user-select: none;
+      transition: .15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .tag:hover, .pill:hover { transform: translateY(-1px); }
+    .tag.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .pill .remove, .mini-remove { font-weight: 700; cursor: pointer; }
+    .picker-input {
+      background: #fff;
+      cursor: pointer;
+    }
+    .custom-row, .actions, .inline-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    button {
+      appearance: none;
+      border: 0;
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: .15s ease;
+      background: #e5e7eb;
+      color: #111827;
+    }
+    button:hover { transform: translateY(-1px); filter: brightness(0.98); }
+    button.primary { background: var(--primary); color: #fff; }
+    button.success { background: var(--success); color: #fff; }
+    button.warning { background: var(--warning); color: #111827; }
+    button.danger { background: var(--danger); color: #fff; }
+    button.ghost { background: #fff; border: 1px solid var(--line); color: #334155; }
+    button.small { padding: 10px 12px; font-size: 13px; }
+    .preview {
+      min-height: 620px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 13px;
+      line-height: 1.45;
+      background: #fbfcfe;
+      padding: 10px 12px;
+    }
+    .tip { font-size: 12px; color: var(--muted); margin-top: 8px; }
+    .empty {
+      color: var(--muted);
+      font-size: 13px;
+      padding: 4px 0;
+    }
+    .toast {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      z-index: 30;
+      background: rgba(17, 24, 39, 0.94);
+      color: #fff;
+      padding: 12px 16px;
+      border-radius: 12px;
+      font-size: 14px;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(8px);
+      transition: .2s ease;
+      max-width: min(90vw, 360px);
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.45);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 20;
+      padding: 16px;
+    }
+    .modal.show { display: flex; }
+    .modal-card {
+      width: min(860px, 100%);
+      max-height: min(86vh, 900px);
+      overflow: auto;
+      background: #fff;
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      box-shadow: 0 20px 50px rgba(15, 23, 42, 0.2);
+      padding: 18px;
+    }
+    .modal-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+    .modal-head h3 { margin: 0; font-size: 18px; }
+    .modal-desc { color: var(--muted); font-size: 13px; margin-bottom: 12px; }
+    .modal-close {
+      background: #fff;
+      border: 1px solid var(--line);
+      color: #334155;
+    }
+    .history-toolbar {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: end;
+      margin-bottom: 12px;
+    }
+    .history-list {
+      display: grid;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .history-item {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px;
+      background: #f8fbff;
+      display: grid;
+      gap: 8px;
+    }
+    .history-item-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .history-meta {
+      font-size: 12px;
+      color: var(--muted);
+    }
+    @media (max-width: 1080px) {
+      .layout { grid-template-columns: 1fr; }
+      .sticky-panel { position: static; }
+      .mini-stat-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    }
+    @media (max-width: 760px) {
+      body { padding: 12px; }
+      .hero { padding: 18px; }
+      .panel { padding: 14px; }
+      .grid, .grid-3, .mini-stat-grid, .title-grid, .staff-row-grid { grid-template-columns: 1fr; }
+      .actions button, .custom-row button, .inline-actions button { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <section class="hero">
+      <div>
+        <h1>🛢️ 钻井日报生成器</h1>
+        <p>纯网页版 · 本地自动保存 · 预览右侧吸附 · 工况弹窗顺序选择 · 人员/头衔均可动态增删</p>
+      </div>
+      <div class="status" id="saveStatus">已启用本地自动保存</div>
+    </section>
+
+    <div class="layout">
+      <div class="stack">
+        <section class="panel">
+          <h2>基本信息</h2>
+          <div class="grid-3">
+            <div class="field"><label for="unitName">单位名称</label><input id="unitName" type="text" /></div>
+            <div class="field"><label for="date">日期</label><input id="date" type="date" /></div>
+            <div class="field"><label for="area">所在区域</label><input id="area" type="text" /></div>
+            <div class="field"><label for="wellName">井号</label><input id="wellName" type="text" /></div>
+            <div class="field"><label for="designDepth">设计井深 (m)</label><input id="designDepth" type="text" /></div>
+            <div class="field"><label for="currentDepth">当前井深 (m)</label><input id="currentDepth" type="text" /></div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="inline-actions" style="justify-content: space-between; margin-bottom: 12px;">
+            <div>
+              <h2 style="margin-bottom:4px;">头衔信息</h2>
+              <div class="sub" style="margin:0;">领导头衔单独维护，例如基地经理、平台经理、驻井工程师；人数会计入中方/外籍统计。</div>
+            </div>
+            <button type="button" class="ghost small" id="addTitleBtn">+ 添加头衔</button>
+          </div>
+          <div class="list-stack" id="titleList"></div>
+        </section>
+
+        <section class="panel">
+          <div class="inline-actions" style="justify-content: space-between; margin-bottom: 12px;">
+            <div>
+              <h2 style="margin-bottom:4px;">人员情况</h2>
+              <div class="sub" style="margin:0;">分组可动态增删；类别仅保留中方、外籍、自定义，自动汇总。</div>
+            </div>
+            <button type="button" class="ghost small" id="addStaffBtn">+ 添加人员分组</button>
+          </div>
+          <div class="list-stack" id="staffList"></div>
+          <div class="mini-stat-grid" id="staffStats"></div>
+        </section>
+
+        <section class="panel">
+          <h2>物资情况</h2>
+          <div class="grid-3">
+            <div class="field"><label for="foodDays">生活物资储备 (天)</label><input id="foodDays" type="number" min="0" /></div>
+            <div class="field"><label for="dieselAmount">柴油量 (方)</label><input id="dieselAmount" type="number" min="0" step="0.1" /></div>
+            <div class="field"><label for="dieselDays">可用天数</label><input id="dieselDays" type="number" min="0" /></div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>今日工况</h2>
+          <div class="field">
+            <label for="todayPickerInput">点击输入框选择工况</label>
+            <input id="todayPickerInput" class="picker-input" type="text" placeholder="点击打开工况选择窗口，按点击顺序填入" readonly />
+          </div>
+          <div class="selected-list" id="todaySelectedList"></div>
+          <div class="tip">也可以在弹窗里直接点击常用工况标签，点几个加几个，顺序就是生成日报的顺序。</div>
+        </section>
+
+        <section class="panel">
+          <h2>下步工况</h2>
+          <div class="field">
+            <label for="nextPickerInput">点击输入框选择工况</label>
+            <input id="nextPickerInput" class="picker-input" type="text" placeholder="点击打开工况选择窗口，按点击顺序填入" readonly />
+          </div>
+          <div class="selected-list" id="nextSelectedList"></div>
+          <div class="tip">交互与“今日工况”完全一致。</div>
+        </section>
+
+        <section class="panel">
+          <h2>通讯与安全</h2>
+          <div class="grid-3">
+            <div class="field"><label for="phone">平台经理电话</label><input id="phone" type="text" /></div>
+            <div class="field"><label for="thuraya">Thuraya 电话</label><input id="thuraya" type="text" /></div>
+            <div class="field"><label for="satInternal">卫星座机 (内线)</label><input id="satInternal" type="text" /></div>
+            <div class="field"><label for="satExternal">卫星座机 (外线)</label><input id="satExternal" type="text" /></div>
+          </div>
+          <div class="field" style="margin-top:12px;">
+            <label for="safety">安全情况</label>
+            <textarea id="safety"></textarea>
+          </div>
+        </section>
+      </div>
+
+      <div class="stack sticky-panel">
+        <section class="panel">
+          <h2>操作</h2>
+          <div class="actions">
+            <button type="button" class="primary" id="generateBtn">📋 生成日报</button>
+            <button type="button" class="success" id="copyBtn">📎 复制到剪贴板</button>
+            <button type="button" class="warning" id="exportBtn">💾 导出 TXT</button>
+            <button type="button" class="ghost" id="historyBtn">🕘 历史记录查询</button>
+            <button type="button" class="ghost" id="resetBtn">↺ 恢复默认配置</button>
+          </div>
+          <div class="tip">每次点击“生成日报”都会把当天最后一次生成结果保存到本地历史记录，可按日期查询。</div>
+        </section>
+
+        <section class="panel">
+          <h2>日报预览</h2>
+          <textarea id="preview" class="preview" readonly placeholder="点击“生成日报”后在这里查看内容"></textarea>
+        </section>
+
+        <section class="panel" id="historyPanel" style="display:none;">
+          <h2>历史记录查询</h2>
+          <div class="history-toolbar">
+            <div class="field" style="min-width:180px; flex:1;">
+              <label for="historyDate">按日期查询</label>
+              <input id="historyDate" type="date" />
+            </div>
+            <button type="button" class="ghost" id="searchHistoryBtn">查询</button>
+            <button type="button" class="ghost" id="showAllHistoryBtn">查看全部</button>
+            <button type="button" class="ghost" id="hideHistoryBtn">收起</button>
+          </div>
+          <div class="tip">规则：同一天只保留最后一次生成的日报。</div>
+          <div class="history-list" id="historyList"></div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="conditionModal">
+    <div class="modal-card">
+      <div class="modal-head">
+        <div>
+          <h3 id="modalTitle">选择工况</h3>
+          <div class="modal-desc">点击标签直接加入下方词条区；再次点击已选词条可移除。按点击顺序保存。</div>
+        </div>
+        <button type="button" class="modal-close small" id="closeModalBtn">关闭</button>
+      </div>
+      <div class="field">
+        <label for="conditionSearch">快速输入/新增工况</label>
+        <div class="custom-row">
+          <input id="conditionSearch" type="text" placeholder="输入自定义工况，回车或点按钮加入当前模块" />
+          <button type="button" class="ghost small" id="addCustomConditionBtn">加入当前模块</button>
+        </div>
+      </div>
+      <div class="section-label" style="margin-top:14px;">常用工况</div>
+      <div class="tags" id="modalTags"></div>
+      <div class="section-label" style="margin-top:14px;">已选顺序</div>
+      <div class="selected-list" id="modalSelectedList"></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const STORAGE_KEY = 'daily_report_generator_web_v2';
+    const HISTORY_KEY = 'daily_report_generator_history_v1';
+    const CATEGORY_OPTIONS = ['中方', '外籍', '自定义'];
+    const LEGACY_KEYS = ['daily_report_generator_web_v1'];
+
+    const defaultData = {
+      unitName: 'Rig919',
+      date: '',
+      area: 'H',
+      wellName: 'Raphia SW1-22',
+      designDepth: '1086',
+      currentDepth: '',
+      foodDays: 30,
+      dieselAmount: 53,
+      dieselDays: 13,
+      phone: '00235-93577318',
+      thuraya: '008821621906786',
+      satInternal: '6660353',
+      satExternal: '021-80246760',
+      safety: '周边安全无异常',
+      titleEntries: [
+        { id: uid(), title: '基地经理', name: '赵铁寨', category: '中方', count: 1, resident: true }
+      ],
+      staffEntries: [
+        { id: uid(), name: '919 队', category: '中方', count: 14 },
+        { id: uid(), name: '厨师', category: '中方', count: 3 },
+        { id: uid(), name: '大夫', category: '中方', count: 2 },
+        { id: uid(), name: '顶驱', category: '中方', count: 1 },
+        { id: uid(), name: '运输', category: '中方', count: 11 },
+        { id: uid(), name: '固井', category: '中方', count: 3 },
+        { id: uid(), name: '当地雇员', category: '自定义', count: 29 },
+        { id: uid(), name: '士兵', category: '自定义', count: 8 },
+        { id: uid(), name: '安保', category: '自定义', count: 13 }
+      ],
+      workConditions: [
+        '一开验收', '整改', '组合 BHA', '技术交底', '一开钻进',
+        '循环', '短起下', '起钻', '下套管', '组合钻具',
+        '配一开泥浆', '自查自改', '井场标准化', '测试顶驱',
+        '铺井场设备围堰', '上钻具', '钻具通径', '安装导管喇叭口',
+        '起井架底座', '安装飘台', '安装顶驱导轨', '挂顶驱', '安装顶驱',
+        '远控房及液压管排就位', '安装立管阀门组', '安装放喷管线',
+        '安装天车', '穿引绳', '穿大绳', '安装逃生绳', '安装动力绳',
+        '安装死活绳头', '起井架', '安装固控设备', '安装泥浆罐',
+        '拆转盘', '拆大梁', '拆底座拉筋', '拆底座', '清理钢木基础',
+        '搬迁井架', '搬迁泥浆罐', '搬迁水罐', '铺钢木基础',
+        '憋压侯凝', '座套管卡瓦', '甩 BOP 组', '安装油管头', '安装采油树',
+        '甩钻具', '下套管', '固井', '电测', '二开钻进'
+      ],
+      selectedToday: [],
+      selectedNext: []
+    };
+
+    let state = loadState();
+    let toastTimer = null;
+    let activeConditionType = 'today';
+
+    function uid() {
+      return Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
+    }
+
+    function deepClone(obj) {
+      return JSON.parse(JSON.stringify(obj));
+    }
+
+    function migrateLegacy(saved) {
+      if (!saved || typeof saved !== 'object') return null;
+      if (Array.isArray(saved.titleEntries) && Array.isArray(saved.staffEntries)) return saved;
+
+      const migrated = deepClone(defaultData);
+      Object.assign(migrated, saved);
+
+      const legacyManager = saved.manager || '赵铁寨';
+      migrated.titleEntries = [
+        { id: uid(), title: '基地经理', name: legacyManager, category: '中方', count: 1, resident: false }
+      ];
+
+      const groupMap = saved.staffGroups || {};
+      const categoryMap = {
+        '当地雇员': '自定义',
+        '士兵': '自定义',
+        '安保': '自定义'
+      };
+      migrated.staffEntries = Object.entries(groupMap).map(([name, count]) => ({
+        id: uid(),
+        name,
+        category: categoryMap[name] || '中方',
+        count: Number(count) || 0
+      }));
+      if (!migrated.staffEntries.length) migrated.staffEntries = deepClone(defaultData.staffEntries);
+      migrated.selectedToday = Array.isArray(saved.selectedToday) ? saved.selectedToday : [];
+      migrated.selectedNext = Array.isArray(saved.selectedNext) ? saved.selectedNext : [];
+      migrated.workConditions = Array.isArray(saved.workConditions) ? saved.workConditions : deepClone(defaultData.workConditions);
+      return migrated;
+    }
+
+    function loadState() {
+      try {
+        let saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
+        if (!saved) {
+          for (const key of LEGACY_KEYS) {
+            const legacy = JSON.parse(localStorage.getItem(key) || 'null');
+            if (legacy) { saved = migrateLegacy(legacy); break; }
+          }
+        }
+        const merged = deepClone(defaultData);
+        if (saved && typeof saved === 'object') {
+          const normalized = migrateLegacy(saved) || saved;
+          Object.assign(merged, normalized);
+          merged.titleEntries = normalizeTitleEntries(normalized.titleEntries);
+          merged.staffEntries = normalizeStaffEntries(normalized.staffEntries);
+          merged.workConditions = normalizeConditionPool(normalized.workConditions);
+          merged.selectedToday = normalizeSelectedList(normalized.selectedToday, merged.workConditions);
+          merged.selectedNext = normalizeSelectedList(normalized.selectedNext, merged.workConditions);
+        }
+        if (!merged.date) merged.date = new Date().toISOString().slice(0, 10);
+        return merged;
+      } catch {
+        const fresh = deepClone(defaultData);
+        fresh.date = new Date().toISOString().slice(0, 10);
+        return fresh;
+      }
+    }
+
+    function normalizeCategory(value, fallbackName = '') {
+      const raw = String(value || '').trim();
+      if (CATEGORY_OPTIONS.includes(raw)) return raw;
+      if (['当地雇员', '士兵', '安保', '其他'].includes(raw)) return '自定义';
+      const name = String(fallbackName || '').trim();
+      if (['当地雇员', '士兵', '安保'].includes(name)) return '自定义';
+      return '中方';
+    }
+
+    function normalizeTitleEntries(entries) {
+      if (!Array.isArray(entries) || !entries.length) {
+        return [{ id: uid(), title: '基地经理', name: '赵铁寨', category: '中方', count: 1, resident: true }];
+      }
+      return entries.map(item => ({
+        id: item.id || uid(),
+        title: String(item.title || '').trim() || '头衔',
+        name: String(item.name || '').trim(),
+        category: normalizeCategory(item.category, item.title),
+        count: Math.max(0, parseInt(item.count ?? 1, 10) || 0),
+        resident: Boolean(item.resident)
+      }));
+    }
+
+    function normalizeStaffEntries(entries) {
+      if (!Array.isArray(entries) || !entries.length) return deepClone(defaultData.staffEntries);
+      return entries.map(item => ({
+        id: item.id || uid(),
+        name: String(item.name || '').trim() || '未命名分组',
+        category: normalizeCategory(item.category, item.name),
+        count: Math.max(0, parseInt(item.count || 0, 10) || 0)
+      }));
+    }
+
+    function normalizeConditionPool(list) {
+      const seen = new Set();
+      const source = Array.isArray(list) ? list : [];
+      const result = [];
+      source.forEach(item => {
+        const text = String(item || '').trim();
+        if (!text || seen.has(text)) return;
+        seen.add(text);
+        result.push(text);
+      });
+      return result.length ? result : deepClone(defaultData.workConditions);
+    }
+
+    function normalizeSelectedList(list, pool) {
+      const seen = new Set();
+      const result = [];
+      (Array.isArray(list) ? list : []).forEach(item => {
+        const text = String(item || '').trim();
+        if (!text || seen.has(text)) return;
+        seen.add(text);
+        result.push(text);
+        if (!pool.includes(text)) pool.push(text);
+      });
+      return result;
+    }
+
+    function loadHistory() {
+      try {
+        const data = JSON.parse(localStorage.getItem(HISTORY_KEY) || '{}');
+        return data && typeof data === 'object' ? data : {};
+      } catch {
+        return {};
+      }
+    }
+
+    function saveHistoryRecord(reportText) {
+      const reportDate = String(state.date || new Date().toISOString().slice(0, 10)).trim();
+      if (!reportDate) return;
+      const history = loadHistory();
+      history[reportDate] = {
+        date: reportDate,
+        updatedAt: new Date().toISOString(),
+        unitName: state.unitName || '',
+        wellName: state.wellName || '',
+        report: reportText
+      };
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+    }
+
+    function formatTime(iso) {
+      if (!iso) return '';
+      const date = new Date(iso);
+      if (Number.isNaN(date.getTime())) return String(iso);
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, '0');
+      const d = String(date.getDate()).padStart(2, '0');
+      const hh = String(date.getHours()).padStart(2, '0');
+      const mm = String(date.getMinutes()).padStart(2, '0');
+      const ss = String(date.getSeconds()).padStart(2, '0');
+      return `${y}-${m}-${d} ${hh}:${mm}:${ss}`;
+    }
+
+    function renderHistoryList(mode = 'date') {
+      const box = document.getElementById('historyList');
+      const history = loadHistory();
+      let records = Object.values(history).sort((a, b) => String(b.date).localeCompare(String(a.date)));
+
+      if (mode === 'date') {
+        const selectedDate = document.getElementById('historyDate').value;
+        if (selectedDate) records = records.filter(item => item.date === selectedDate);
+      }
+
+      if (!records.length) {
+        box.innerHTML = '<div class="empty">没有找到对应历史记录</div>';
+        return;
+      }
+
+      box.innerHTML = records.map(item => `
+        <div class="history-item">
+          <div class="history-item-head">
+            <strong>${escapeHtml(item.date)}</strong>
+            <span class="history-meta">最后生成：${escapeHtml(formatTime(item.updatedAt))}</span>
+          </div>
+          <div class="history-meta">单位：${escapeHtml(item.unitName || '-')} ｜ 井号：${escapeHtml(item.wellName || '-')}</div>
+          <textarea readonly rows="8">${escapeHtml(item.report || '')}</textarea>
+        </div>
+      `).join('');
+    }
+
+    function showHistoryPanel(mode = 'date') {
+      document.getElementById('historyPanel').style.display = 'block';
+      renderHistoryList(mode);
+    }
+
+    function hideHistoryPanel() {
+      document.getElementById('historyPanel').style.display = 'none';
+    }
+
+    function saveState(show = false) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      updateSaveStatus();
+      if (show) showToast('已保存到浏览器本地');
+    }
+
+    function updateSaveStatus() {
+      const el = document.getElementById('saveStatus');
+      const now = new Date();
+      const hh = String(now.getHours()).padStart(2, '0');
+      const mm = String(now.getMinutes()).padStart(2, '0');
+      const ss = String(now.getSeconds()).padStart(2, '0');
+      el.textContent = `已自动保存 · ${hh}:${mm}:${ss}`;
+    }
+
+    function showToast(text) {
+      const el = document.getElementById('toast');
+      el.textContent = text;
+      el.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
+    }
+
+    function setValue(id, value) {
+      const el = document.getElementById(id);
+      if (el) el.value = value ?? '';
+    }
+
+    function escapeHtml(text) {
+      return String(text).replace(/[&<>"']/g, s => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[s]));
+    }
+
+    function renderInputs() {
+      setValue('unitName', state.unitName);
+      setValue('date', state.date);
+      setValue('area', state.area);
+      setValue('wellName', state.wellName);
+      setValue('designDepth', state.designDepth);
+      setValue('currentDepth', state.currentDepth);
+      setValue('foodDays', state.foodDays);
+      setValue('dieselAmount', state.dieselAmount);
+      setValue('dieselDays', state.dieselDays);
+      setValue('phone', state.phone);
+      setValue('thuraya', state.thuraya);
+      setValue('satInternal', state.satInternal);
+      setValue('satExternal', state.satExternal);
+      setValue('safety', state.safety);
+    }
+
+    function renderTitles() {
+      const box = document.getElementById('titleList');
+      if (!state.titleEntries.length) {
+        box.innerHTML = '<div class="empty">暂无头衔，请点击右上角“添加头衔”。</div>';
+        return;
+      }
+      box.innerHTML = state.titleEntries.map(item => `
+        <div class="row-card">
+          <div class="title-grid" style="grid-template-columns: 1.1fr 1fr 0.8fr 0.7fr 0.9fr auto;">
+            <div class="field">
+              <label>头衔</label>
+              <input type="text" data-title-field="title" data-id="${item.id}" value="${escapeHtml(item.title)}" placeholder="如：基地经理" />
+            </div>
+            <div class="field">
+              <label>姓名</label>
+              <input type="text" data-title-field="name" data-id="${item.id}" value="${escapeHtml(item.name)}" placeholder="如：赵铁寨" />
+            </div>
+            <div class="field">
+              <label>类别</label>
+              <select data-title-field="category" data-id="${item.id}">
+                ${CATEGORY_OPTIONS.map(opt => `<option value="${opt}" ${item.category === opt ? 'selected' : ''}>${opt}</option>`).join('')}
+              </select>
+            </div>
+            <div class="field">
+              <label>人数</label>
+              <input type="number" min="0" data-title-field="count" data-id="${item.id}" value="${item.count}" />
+            </div>
+            <div class="field">
+              <label style="display:flex; align-items:center; gap:8px; min-height:44px;">
+                <input type="checkbox" data-title-field="resident" data-id="${item.id}" ${item.resident ? 'checked' : ''} />
+                <span>驻井</span>
+              </label>
+            </div>
+            <button type="button" class="danger small" data-remove-title="${item.id}">删除</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderStaff() {
+      const box = document.getElementById('staffList');
+      if (!state.staffEntries.length) {
+        box.innerHTML = '<div class="empty">暂无人员分组，请点击右上角“添加人员分组”。</div>';
+      } else {
+        box.innerHTML = state.staffEntries.map(item => `
+          <div class="row-card">
+            <div class="staff-row-grid">
+              <div class="field">
+                <label>分组名称</label>
+                <input type="text" data-staff-field="name" data-id="${item.id}" value="${escapeHtml(item.name)}" placeholder="如：919 队 / 厨师 / 大夫" />
+              </div>
+              <div class="field">
+                <label>类别</label>
+                <select data-staff-field="category" data-id="${item.id}">
+                  ${CATEGORY_OPTIONS.map(opt => `<option value="${opt}" ${item.category === opt ? 'selected' : ''}>${opt}</option>`).join('')}
+                </select>
+              </div>
+              <div class="field">
+                <label>人数</label>
+                <input type="number" min="0" data-staff-field="count" data-id="${item.id}" value="${item.count}" />
+              </div>
+              <button type="button" class="danger small" data-remove-staff="${item.id}">删除</button>
+            </div>
+          </div>
+        `).join('');
+      }
+      renderStaffStats();
+    }
+
+    function getStaffSummary() {
+      const summary = { '中方': 0, '外籍': 0, '自定义': 0 };
+      const detail = { '中方': [], '外籍': [], '自定义': [] };
+
+      state.staffEntries.forEach(item => {
+        const name = String(item.name || '').trim();
+        const category = normalizeCategory(item.category, item.name);
+        const count = Math.max(0, parseInt(item.count || 0, 10) || 0);
+        summary[category] += count;
+        if (count > 0 && name) detail[category].push(`${name}${count}人`);
+      });
+
+      state.titleEntries.forEach(item => {
+        const title = String(item.title || '').trim();
+        const name = String(item.name || '').trim();
+        const category = normalizeCategory(item.category, item.title);
+        const count = Math.max(0, parseInt(item.count ?? 1, 10) || 0);
+        summary[category] += count;
+        if (count > 0 && (title || name)) {
+          detail[category].push(`${title || '头衔'}${name ? `(${name})` : ''}${count}人`);
+        }
+      });
+
+      return { summary, detail, total: Object.values(summary).reduce((a, b) => a + b, 0) };
+    }
+
+    function renderStaffStats() {
+      const { summary, total } = getStaffSummary();
+      const box = document.getElementById('staffStats');
+      box.innerHTML = [
+        ['总人数', total],
+        ['中方', summary['中方']],
+        ['外籍', summary['外籍']],
+        ['自定义', summary['自定义']]
+      ].map(([k, v]) => `
+        <div class="stat-card">
+          <div class="k">${k}</div>
+          <div class="v">${v}</div>
+        </div>
+      `).join('');
+    }
+
+    function renderConditionSummary(type) {
+      const list = type === 'today' ? state.selectedToday : state.selectedNext;
+      document.getElementById(type + 'PickerInput').value = list.join('，');
+      const box = document.getElementById(type + 'SelectedList');
+      if (!list.length) {
+        box.innerHTML = '<div class="empty">暂未选择工况</div>';
+        return;
+      }
+      box.innerHTML = list.map((text, index) => `
+        <span class="pill" data-remove-selected="${type}" data-tag="${escapeHtml(text)}">
+          ${index + 1}. ${escapeHtml(text)}
+          <span class="remove">×</span>
+        </span>
+      `).join('');
+    }
+
+    function renderConditionModal() {
+      const selected = activeConditionType === 'today' ? state.selectedToday : state.selectedNext;
+      const selectedSet = new Set(selected);
+      document.getElementById('modalTitle').textContent = activeConditionType === 'today' ? '选择今日工况' : '选择下步工况';
+      document.getElementById('modalTags').innerHTML = state.workConditions.map(text => `
+        <span class="tag ${selectedSet.has(text) ? 'active' : ''}" data-modal-tag="${escapeHtml(text)}">${escapeHtml(text)}</span>
+      `).join('');
+      const selectedBox = document.getElementById('modalSelectedList');
+      if (!selected.length) {
+        selectedBox.innerHTML = '<div class="empty">暂未选择工况</div>';
+      } else {
+        selectedBox.innerHTML = selected.map((text, index) => `
+          <span class="pill" data-remove-selected="${activeConditionType}" data-tag="${escapeHtml(text)}">${index + 1}. ${escapeHtml(text)}<span class="remove">×</span></span>
+        `).join('');
+      }
+      document.getElementById('conditionSearch').value = '';
+    }
+
+    function openConditionModal(type) {
+      activeConditionType = type;
+      renderConditionModal();
+      document.getElementById('conditionModal').classList.add('show');
+    }
+
+    function closeConditionModal() {
+      document.getElementById('conditionModal').classList.remove('show');
+    }
+
+    function addCondition(type, text) {
+      const value = String(text || '').trim();
+      if (!value) return;
+      const key = type === 'today' ? 'selectedToday' : 'selectedNext';
+      if (!state.workConditions.includes(value)) state.workConditions.push(value);
+      if (!state[key].includes(value)) state[key].push(value);
+      saveState();
+      renderConditionSummary('today');
+      renderConditionSummary('next');
+      renderConditionModal();
+      generateReport();
+    }
+
+    function removeCondition(type, text) {
+      const key = type === 'today' ? 'selectedToday' : 'selectedNext';
+      state[key] = state[key].filter(item => item !== text);
+      saveState();
+      renderConditionSummary('today');
+      renderConditionSummary('next');
+      renderConditionModal();
+      generateReport();
+    }
+
+    function toggleConditionFromModal(text) {
+      const key = activeConditionType === 'today' ? 'selectedToday' : 'selectedNext';
+      if (state[key].includes(text)) removeCondition(activeConditionType, text);
+      else addCondition(activeConditionType, text);
+    }
+
+    function buildTitleText() {
+      const active = state.titleEntries
+        .map(item => ({
+          title: String(item.title || '').trim(),
+          name: String(item.name || '').trim(),
+          category: normalizeCategory(item.category, item.title),
+          count: Math.max(0, parseInt(item.count ?? 1, 10) || 0),
+          resident: Boolean(item.resident)
+        }))
+        .filter(item => item.title || item.name);
+
+      const lines = active.map(item => {
+        const head = item.title || '头衔';
+        const person = item.name ? `：${item.name}` : '';
+        const extra = item.count > 0 ? `（${item.category} ${item.count}人）` : '';
+        return `${head}${person}${extra}`;
+      });
+
+      return { active, lines };
+    }
+
+    function generateReport() {
+      const { summary, detail } = getStaffSummary();
+      const titleInfo = buildTitleText();
+      const personnelParts = [];
+      personnelParts.push(`中方人员 ${summary['中方']} 人${detail['中方'].length ? `（${detail['中方'].join('，')}）` : ''}`);
+      personnelParts.push(`外籍人员 ${summary['外籍']} 人${detail['外籍'].length ? `（${detail['外籍'].join('，')}）` : ''}`);
+      if (summary['自定义'] > 0) {
+        personnelParts.push(`自定义人员 ${summary['自定义']} 人${detail['自定义'].length ? `（${detail['自定义'].join('，')}）` : ''}`);
+      }
+
+      const residentLeaders = titleInfo.active
+        .filter(item => item.resident && (item.title || item.name))
+        .map(item => `${item.title || ''}${item.name || ''}`)
+        .filter(Boolean);
+      const residentText = residentLeaders.length ? `${residentLeaders.join('、')}驻井指导工作` : '';
+      const personnelLine = `4.人员情况：${personnelParts.join('；')}${residentText ? `；${residentText}` : ''}。`;
+
+      const reportLines = [
+        `1.单位名称：${state.unitName || ''}`,
+        `2.日期：${state.date || ''}`,
+        `3.所在区域：${state.area || ''}`,
+        personnelLine
+      ];
+
+      if (titleInfo.lines.length) {
+        reportLines.push(`领导头衔：${titleInfo.lines.join('；')}。`);
+      }
+
+      const report = reportLines.concat([
+        `5.生活物资储备天数：${state.foodDays || 0}天；井场柴油${state.dieselAmount || 0}方，可用${state.dieselDays || 0}天。`,
+        `6.井号：${state.wellName || ''} 设计井深：${state.designDepth || ''} m`,
+        `7.今日工况：${state.selectedToday.length ? state.selectedToday.join('，') : '无'}。`,
+        `8.当前井深：${state.currentDepth || ''}米`,
+        `9.下步工况：${state.selectedNext.length ? state.selectedNext.join('，') : '无'}。`,
+        `10.通讯情况：当地手机信号差，平台经理：${state.phone || ''}`,
+        `Thuraya 电话：${state.thuraya || ''}；卫星网络座机：${state.satInternal || ''}（内线） ${state.satExternal || ''}（外线）`,
+        `11.安全情况：${state.safety || ''}`
+      ]).join('\n');
+      document.getElementById('preview').value = report;
+      return report;
+    }
+
+    async function copyReport() {
+      const text = generateReport();
+      try {
+        await navigator.clipboard.writeText(text);
+        showToast('已复制到剪贴板');
+      } catch {
+        const area = document.getElementById('preview');
+        area.focus();
+        area.select();
+        const ok = document.execCommand('copy');
+        showToast(ok ? '已复制到剪贴板' : '复制失败，请手动复制');
+      }
+    }
+
+    function exportTxt() {
+      const text = generateReport();
+      const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const date = (state.date || new Date().toISOString().slice(0, 10)).replace(/-/g, '');
+      const safeWell = (state.wellName || '日报').replace(/[\\/:*?"<>|\s]+/g, '_');
+      a.href = url;
+      a.download = `${safeWell}_${date}.txt`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      showToast('TXT 文件已导出');
+    }
+
+    function resetDefaults() {
+      if (!confirm('确定恢复默认配置吗？当前本地保存的数据会被覆盖。')) return;
+      state = deepClone(defaultData);
+      state.date = new Date().toISOString().slice(0, 10);
+      saveState(true);
+      renderAll();
+      showToast('已恢复默认配置');
+    }
+
+    function renderAll() {
+      renderInputs();
+      renderTitles();
+      renderStaff();
+      renderConditionSummary('today');
+      renderConditionSummary('next');
+      updateSaveStatus();
+      generateReport();
+    }
+
+    function bindBasicInputs() {
+      const ids = ['unitName','date','area','wellName','designDepth','currentDepth','foodDays','dieselAmount','dieselDays','phone','thuraya','satInternal','satExternal','safety'];
+      ids.forEach(id => {
+        const el = document.getElementById(id);
+        el.addEventListener('input', () => {
+          state[id] = el.value;
+          saveState();
+          generateReport();
+        });
+      });
+    }
+
+    document.getElementById('addTitleBtn').addEventListener('click', () => {
+      state.titleEntries.push({ id: uid(), title: '新头衔', name: '', category: '中方', count: 1, resident: false });
+      saveState(true);
+      renderTitles();
+      renderStaffStats();
+      generateReport();
+    });
+
+    document.getElementById('titleList').addEventListener('input', e => {
+      const id = e.target.dataset.id;
+      const field = e.target.dataset.titleField;
+      if (!id || !field) return;
+      const item = state.titleEntries.find(x => x.id === id);
+      if (!item) return;
+      if (field === 'resident') {
+        item.resident = Boolean(e.target.checked);
+      } else {
+        item[field] = field === 'count' ? Math.max(0, parseInt(e.target.value || 0, 10) || 0) : e.target.value;
+      }
+      saveState();
+      renderStaffStats();
+      generateReport();
+    });
+
+    document.getElementById('titleList').addEventListener('change', e => {
+      const id = e.target.dataset.id;
+      const field = e.target.dataset.titleField;
+      if (!id || !field) return;
+      const item = state.titleEntries.find(x => x.id === id);
+      if (!item) return;
+      if (field === 'category') {
+        item.category = normalizeCategory(e.target.value, item.title);
+      } else if (field === 'resident') {
+        item.resident = Boolean(e.target.checked);
+      } else {
+        return;
+      }
+      saveState();
+      renderStaffStats();
+      generateReport();
+    });
+
+    document.getElementById('titleList').addEventListener('click', e => {
+      const btn = e.target.closest('[data-remove-title]');
+      if (!btn) return;
+      state.titleEntries = state.titleEntries.filter(x => x.id !== btn.dataset.removeTitle);
+      saveState(true);
+      renderTitles();
+      renderStaffStats();
+      generateReport();
+    });
+
+    document.getElementById('addStaffBtn').addEventListener('click', () => {
+      state.staffEntries.push({ id: uid(), name: '新分组', category: '中方', count: 0 });
+      saveState(true);
+      renderStaff();
+      generateReport();
+    });
+
+    document.getElementById('staffList').addEventListener('input', e => {
+      const id = e.target.dataset.id;
+      const field = e.target.dataset.staffField;
+      if (!id || !field) return;
+      const item = state.staffEntries.find(x => x.id === id);
+      if (!item) return;
+      item[field] = field === 'count' ? Math.max(0, parseInt(e.target.value || 0, 10) || 0) : e.target.value;
+      saveState();
+      renderStaffStats();
+      generateReport();
+    });
+
+    document.getElementById('staffList').addEventListener('change', e => {
+      const id = e.target.dataset.id;
+      const field = e.target.dataset.staffField;
+      if (!id || !field) return;
+      const item = state.staffEntries.find(x => x.id === id);
+      if (!item) return;
+      if (field === 'category') {
+        item.category = normalizeCategory(e.target.value, item.name);
+        saveState();
+        renderStaffStats();
+        generateReport();
+      }
+    });
+
+    document.getElementById('staffList').addEventListener('click', e => {
+      const btn = e.target.closest('[data-remove-staff]');
+      if (!btn) return;
+      state.staffEntries = state.staffEntries.filter(x => x.id !== btn.dataset.removeStaff);
+      saveState(true);
+      renderStaff();
+      generateReport();
+    });
+
+    document.getElementById('todayPickerInput').addEventListener('click', () => openConditionModal('today'));
+    document.getElementById('nextPickerInput').addEventListener('click', () => openConditionModal('next'));
+    document.getElementById('closeModalBtn').addEventListener('click', closeConditionModal);
+    document.getElementById('conditionModal').addEventListener('click', e => {
+      if (e.target.id === 'conditionModal') closeConditionModal();
+    });
+
+    document.getElementById('modalTags').addEventListener('click', e => {
+      const tag = e.target.closest('[data-modal-tag]');
+      if (!tag) return;
+      toggleConditionFromModal(tag.dataset.modalTag);
+    });
+
+    function addCustomConditionToActive() {
+      const input = document.getElementById('conditionSearch');
+      const text = input.value.trim();
+      if (!text) return;
+      addCondition(activeConditionType, text);
+      input.value = '';
+      showToast('工况已加入当前模块');
+    }
+
+    document.getElementById('addCustomConditionBtn').addEventListener('click', addCustomConditionToActive);
+    document.getElementById('conditionSearch').addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        addCustomConditionToActive();
+      }
+    });
+
+    document.getElementById('todaySelectedList').addEventListener('click', e => {
+      const item = e.target.closest('[data-remove-selected="today"]');
+      if (!item) return;
+      removeCondition('today', item.dataset.tag);
+    });
+
+    document.getElementById('nextSelectedList').addEventListener('click', e => {
+      const item = e.target.closest('[data-remove-selected="next"]');
+      if (!item) return;
+      removeCondition('next', item.dataset.tag);
+    });
+
+    document.getElementById('modalSelectedList').addEventListener('click', e => {
+      const item = e.target.closest('[data-remove-selected]');
+      if (!item) return;
+      removeCondition(item.dataset.removeSelected, item.dataset.tag);
+    });
+
+    document.getElementById('generateBtn').addEventListener('click', () => {
+      const report = generateReport();
+      saveHistoryRecord(report);
+      renderHistoryList('date');
+      showToast('日报已生成并已保存当天最后一次记录');
+    });
+    document.getElementById('copyBtn').addEventListener('click', copyReport);
+    document.getElementById('exportBtn').addEventListener('click', exportTxt);
+    document.getElementById('historyBtn').addEventListener('click', () => {
+      document.getElementById('historyDate').value = state.date || '';
+      showHistoryPanel('date');
+    });
+    document.getElementById('searchHistoryBtn').addEventListener('click', () => showHistoryPanel('date'));
+    document.getElementById('showAllHistoryBtn').addEventListener('click', () => showHistoryPanel('all'));
+    document.getElementById('hideHistoryBtn').addEventListener('click', hideHistoryPanel);
+    document.getElementById('historyDate').addEventListener('change', () => showHistoryPanel('date'));
+    document.getElementById('resetBtn').addEventListener('click', resetDefaults);
+
+    bindBasicInputs();
+    renderAll();
+    saveState();
+  </script>
+</body>
+</html>
