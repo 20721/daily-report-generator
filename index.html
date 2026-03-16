@@ -25,19 +25,19 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
       background: linear-gradient(180deg, #eff5ff 0%, var(--bg) 100%);
       color: var(--text);
-      padding: 20px;
+      padding: 14px;
     }
-    .app { max-width: 1320px; margin: 0 auto; display: grid; gap: 18px; }
+    .app { max-width: 1320px; margin: 0 auto; display: grid; gap: 12px; }
     .hero {
       background: var(--card);
       border: 1px solid var(--line);
-      border-radius: 22px;
+      border-radius: 20px;
       box-shadow: var(--shadow);
-      padding: 24px;
+      padding: 18px 20px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      gap: 16px;
+      gap: 12px;
       flex-wrap: wrap;
     }
     .hero h1 { margin: 0 0 8px; font-size: 28px; }
@@ -55,24 +55,24 @@
     }
     .layout {
       display: grid;
-      grid-template-columns: minmax(0, 1.25fr) minmax(360px, 0.75fr);
-      gap: 18px;
+      grid-template-columns: minmax(0, 1.3fr) minmax(340px, 0.7fr);
+      gap: 12px;
       align-items: start;
     }
-    .stack { display: grid; gap: 18px; }
+    .stack { display: grid; gap: 12px; }
     .panel {
       background: var(--card);
       border: 1px solid var(--line);
       border-radius: var(--radius);
       box-shadow: var(--shadow);
-      padding: 18px;
+      padding: 14px;
     }
-    .sticky-panel { position: sticky; top: 18px; }
-    .panel h2 { margin: 0 0 12px; font-size: 18px; }
-    .sub { margin: -4px 0 14px; color: var(--muted); font-size: 13px; }
-    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 14px; }
-    .grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px 14px; }
-    .field { display: grid; gap: 6px; min-width: 0; }
+    .sticky-panel { position: sticky; top: 12px; }
+    .panel h2 { margin: 0 0 8px; font-size: 17px; }
+    .sub { margin: -2px 0 10px; color: var(--muted); font-size: 12px; }
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 12px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 12px; }
+    .field { display: grid; gap: 4px; min-width: 0; }
     .field label, .section-label {
       font-size: 13px;
       color: #374151;
@@ -81,66 +81,120 @@
     input[type="text"], input[type="number"], input[type="date"], select, textarea {
       width: 100%;
       border: 1px solid var(--line);
-      border-radius: 12px;
-      padding: 11px 12px;
-      font-size: 14px;
+      border-radius: 10px;
+      padding: 8px 10px;
+      font-size: 13px;
       color: var(--text);
       background: #fff;
       outline: none;
       transition: .15s ease;
     }
-    textarea { resize: vertical; min-height: 76px; }
+    textarea { resize: vertical; min-height: 68px; }
     input:focus, textarea:focus, select:focus {
       border-color: #94b5ff;
       box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
     }
-    .list-stack { display: grid; gap: 12px; }
+    .list-stack { display: grid; gap: 8px; }
     .row-card {
       border: 1px solid var(--line);
-      border-radius: 14px;
-      padding: 12px;
+      border-radius: 12px;
+      padding: 10px;
       background: #f8fafc;
     }
     .row-card + .row-card { margin-top: 0; }
     .title-grid {
       display: grid;
-      grid-template-columns: 1.1fr 1fr auto auto;
+      grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.95fr) 110px 88px 72px;
+      gap: 8px;
+      align-items: end;
+    }
+    .staff-columns {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      align-items: start;
+    }
+    .staff-column {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fbfdff;
+      padding: 12px;
+      height: 100%;
+      display: grid;
+      gap: 10px;
+      align-content: start;
+    }
+    .staff-column-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .staff-column-head h3 {
+      margin: 0;
+      font-size: 15px;
+      color: #0f172a;
+    }
+    .staff-column-sub {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+    .staff-column-list {
+      display: grid;
+      gap: 10px;
+      align-content: start;
+      min-height: 24px;
+    }
+    .staff-column-footer {
+      margin-top: auto;
+      padding-top: 2px;
+    }
+    .supplies-row {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 10px;
       align-items: end;
     }
     .staff-row-grid {
       display: grid;
-      grid-template-columns: 1.2fr 0.9fr 0.7fr auto;
-      gap: 10px;
+      grid-template-columns: 148px 96px 72px 64px;
+      gap: 8px;
       align-items: end;
+      justify-content: start;
     }
+    .staff-row-grid .field { min-width: 0; }
+    .staff-row-grid input,
+    .staff-row-grid select { width: 100%; }
+    .staff-row-grid button { width: 64px; }
     .mini-stat-grid {
       display: grid;
-      grid-template-columns: repeat(5, minmax(0, 1fr));
-      gap: 10px;
-      margin-top: 14px;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 10px;
     }
     .stat-card {
       border: 1px solid var(--line);
-      border-radius: 12px;
+      border-radius: 10px;
       background: #fbfdff;
-      padding: 10px 12px;
+      padding: 8px 10px;
     }
-    .stat-card .k { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
-    .stat-card .v { font-size: 22px; font-weight: 700; color: #0f172a; }
+    .stat-card .k { font-size: 11px; color: var(--muted); margin-bottom: 4px; }
+    .stat-card .v { font-size: 18px; font-weight: 700; color: #0f172a; }
     .tags, .selected-list {
       display: flex;
       flex-wrap: wrap;
-      gap: 8px;
+      gap: 6px;
     }
-    .tags { margin-top: 8px; }
+    .tags { margin-top: 6px; }
     .selected-list {
-      min-height: 44px;
-      padding: 10px;
+      min-height: 38px;
+      padding: 8px;
       border: 1px dashed #bfd4ff;
-      border-radius: 12px;
+      border-radius: 10px;
       background: #f9fbff;
-      margin-top: 10px;
+      margin-top: 8px;
       align-content: flex-start;
     }
     .tag, .pill {
@@ -166,9 +220,18 @@
     }
     .custom-row, .actions, .inline-actions {
       display: flex;
-      gap: 10px;
+      gap: 8px;
       flex-wrap: wrap;
       align-items: center;
+    }
+    .leader-bar {
+      min-height: 38px;
+      padding: 8px 10px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #fbfdff;
+      font-size: 13px;
+      line-height: 1.45;
     }
     button {
       appearance: none;
@@ -295,7 +358,7 @@
       body { padding: 12px; }
       .hero { padding: 18px; }
       .panel { padding: 14px; }
-      .grid, .grid-3, .mini-stat-grid, .title-grid, .staff-row-grid { grid-template-columns: 1fr; }
+      .grid, .grid-3, .mini-stat-grid, .title-grid, .staff-row-grid, .supplies-row { grid-template-columns: 1fr; }
       .actions button, .custom-row button, .inline-actions button { width: 100%; }
     }
   </style>
@@ -325,10 +388,10 @@
         </section>
 
         <section class="panel">
-          <div class="inline-actions" style="justify-content: space-between; margin-bottom: 12px;">
+          <div class="inline-actions" style="justify-content: space-between; margin-bottom: 8px;">
             <div>
               <h2 style="margin-bottom:4px;">头衔信息</h2>
-              <div class="sub" style="margin:0;">领导头衔单独维护，例如基地经理、平台经理、驻井工程师；人数会计入中方/外籍统计。</div>
+              <div class="sub" style="margin:0;">可自定义添加多个领导，填写头衔、姓名、归属；每条领导按 1 人计入中方人员/外籍人员统计。</div>
             </div>
             <button type="button" class="ghost small" id="addTitleBtn">+ 添加头衔</button>
           </div>
@@ -336,21 +399,27 @@
         </section>
 
         <section class="panel">
+          <h2>领导栏</h2>
+          <div class="sub" style="margin:0 0 8px;">独立一行展示领导信息，按头衔自动合并同类姓名。</div>
+          <div id="leaderBar" class="leader-bar"></div>
+        </section>
+
+        <section class="panel">
           <div class="inline-actions" style="justify-content: space-between; margin-bottom: 12px;">
             <div>
               <h2 style="margin-bottom:4px;">人员情况</h2>
-              <div class="sub" style="margin:0;">分组可动态增删；类别仅保留中方、外籍、自定义，自动汇总。</div>
+              <div class="sub" style="margin:0;">分组可动态增删；选中方人员/当地雇员才计入总人数（当地雇员包含士兵/安保），自定义仅展示在人员情况段落里。</div>
             </div>
-            <button type="button" class="ghost small" id="addStaffBtn">+ 添加人员分组</button>
+            <button type="button" class="ghost small" id="addStaffBtn" style="display:none;">+ 添加人员分组</button>
           </div>
-          <div class="list-stack" id="staffList"></div>
+          <div class="staff-columns" id="staffList"></div>
           <div class="mini-stat-grid" id="staffStats"></div>
         </section>
 
         <section class="panel">
           <h2>物资情况</h2>
-          <div class="grid-3">
-            <div class="field"><label for="foodDays">生活物资储备 (天)</label><input id="foodDays" type="number" min="0" /></div>
+          <div class="supplies-row">
+            <div class="field"><label for="foodDays">生活物资储备天数 (天)</label><input id="foodDays" type="number" min="0" /></div>
             <div class="field"><label for="dieselAmount">柴油量 (方)</label><input id="dieselAmount" type="number" min="0" step="0.1" /></div>
             <div class="field"><label for="dieselDays">可用天数</label><input id="dieselDays" type="number" min="0" /></div>
           </div>
@@ -455,7 +524,7 @@
   <script>
     const STORAGE_KEY = 'daily_report_generator_web_v2';
     const HISTORY_KEY = 'daily_report_generator_history_v1';
-    const CATEGORY_OPTIONS = ['中方', '外籍', '自定义'];
+    const CATEGORY_OPTIONS = ['中方人员', '当地雇员', '自定义'];
     const LEGACY_KEYS = ['daily_report_generator_web_v1'];
 
     const defaultData = {
@@ -474,18 +543,17 @@
       satExternal: '021-80246760',
       safety: '周边安全无异常',
       titleEntries: [
-        { id: uid(), title: '基地经理', name: '赵铁寨', category: '中方', count: 1, resident: true }
+        { id: uid(), title: '基地经理', name: '赵铁寨', category: '中方人员', resident: true }
       ],
       staffEntries: [
-        { id: uid(), name: '919 队', category: '中方', count: 14 },
-        { id: uid(), name: '厨师', category: '中方', count: 3 },
-        { id: uid(), name: '大夫', category: '中方', count: 2 },
-        { id: uid(), name: '顶驱', category: '中方', count: 1 },
-        { id: uid(), name: '运输', category: '中方', count: 11 },
-        { id: uid(), name: '固井', category: '中方', count: 3 },
-        { id: uid(), name: '当地雇员', category: '自定义', count: 29 },
-        { id: uid(), name: '士兵', category: '自定义', count: 8 },
-        { id: uid(), name: '安保', category: '自定义', count: 13 }
+        { id: uid(), name: '919 队', category: '中方人员', count: 14 },
+        { id: uid(), name: '厨师', category: '中方人员', count: 3 },
+        { id: uid(), name: '大夫', category: '中方人员', count: 2 },
+        { id: uid(), name: '顶驱', category: '中方人员', count: 1 },
+        { id: uid(), name: '基地经理', category: '中方人员', count: 1 },
+        { id: uid(), name: '当地雇员', category: '当地雇员', count: 29 },
+        { id: uid(), name: '士兵', category: '当地雇员', count: 8 },
+        { id: uid(), name: '安保', category: '当地雇员', count: 13 }
       ],
       workConditions: [
         '一开验收', '整改', '组合 BHA', '技术交底', '一开钻进',
@@ -526,14 +594,14 @@
 
       const legacyManager = saved.manager || '赵铁寨';
       migrated.titleEntries = [
-        { id: uid(), title: '基地经理', name: legacyManager, category: '中方', count: 1, resident: false }
+        { id: uid(), title: '基地经理', name: legacyManager, category: '中方人员', resident: true }
       ];
 
       const groupMap = saved.staffGroups || {};
       const categoryMap = {
-        '当地雇员': '自定义',
-        '士兵': '自定义',
-        '安保': '自定义'
+        '当地雇员': '当地雇员',
+        '士兵': '当地雇员',
+        '安保': '当地雇员'
       };
       migrated.staffEntries = Object.entries(groupMap).map(([name, count]) => ({
         id: uid(),
@@ -579,22 +647,22 @@
     function normalizeCategory(value, fallbackName = '') {
       const raw = String(value || '').trim();
       if (CATEGORY_OPTIONS.includes(raw)) return raw;
-      if (['当地雇员', '士兵', '安保', '其他'].includes(raw)) return '自定义';
+      if (['中方'].includes(raw)) return '中方人员';
+      if (['外籍', '当地雇员', '士兵', '安保', '其他'].includes(raw)) return '当地雇员';
       const name = String(fallbackName || '').trim();
-      if (['当地雇员', '士兵', '安保'].includes(name)) return '自定义';
-      return '中方';
+      if (['当地雇员', '士兵', '安保'].includes(name)) return '当地雇员';
+      return '中方人员';
     }
 
     function normalizeTitleEntries(entries) {
       if (!Array.isArray(entries) || !entries.length) {
-        return [{ id: uid(), title: '基地经理', name: '赵铁寨', category: '中方', count: 1, resident: true }];
+        return [{ id: uid(), title: '基地经理', name: '赵铁寨', category: '中方人员', resident: true }];
       }
       return entries.map(item => ({
         id: item.id || uid(),
         title: String(item.title || '').trim() || '头衔',
         name: String(item.name || '').trim(),
         category: normalizeCategory(item.category, item.title),
-        count: Math.max(0, parseInt(item.count ?? 1, 10) || 0),
         resident: Boolean(item.resident)
       }));
     }
@@ -764,7 +832,7 @@
       }
       box.innerHTML = state.titleEntries.map(item => `
         <div class="row-card">
-          <div class="title-grid" style="grid-template-columns: 1.1fr 1fr 0.8fr 0.7fr 0.9fr auto;">
+          <div class="title-grid">
             <div class="field">
               <label>头衔</label>
               <input type="text" data-title-field="title" data-id="${item.id}" value="${escapeHtml(item.title)}" placeholder="如：基地经理" />
@@ -774,14 +842,10 @@
               <input type="text" data-title-field="name" data-id="${item.id}" value="${escapeHtml(item.name)}" placeholder="如：赵铁寨" />
             </div>
             <div class="field">
-              <label>类别</label>
+              <label>归属</label>
               <select data-title-field="category" data-id="${item.id}">
                 ${CATEGORY_OPTIONS.map(opt => `<option value="${opt}" ${item.category === opt ? 'selected' : ''}>${opt}</option>`).join('')}
               </select>
-            </div>
-            <div class="field">
-              <label>人数</label>
-              <input type="number" min="0" data-title-field="count" data-id="${item.id}" value="${item.count}" />
             </div>
             <div class="field">
               <label style="display:flex; align-items:center; gap:8px; min-height:44px;">
@@ -797,58 +861,106 @@
 
     function renderStaff() {
       const box = document.getElementById('staffList');
-      if (!state.staffEntries.length) {
-        box.innerHTML = '<div class="empty">暂无人员分组，请点击右上角“添加人员分组”。</div>';
-      } else {
-        box.innerHTML = state.staffEntries.map(item => `
-          <div class="row-card">
-            <div class="staff-row-grid">
-              <div class="field">
-                <label>分组名称</label>
-                <input type="text" data-staff-field="name" data-id="${item.id}" value="${escapeHtml(item.name)}" placeholder="如：919 队 / 厨师 / 大夫" />
+      const grouped = {
+        chinese: state.staffEntries.filter(item => normalizeCategory(item.category, item.name) === '中方人员'),
+        foreign: state.staffEntries.filter(item => normalizeCategory(item.category, item.name) === '当地雇员')
+      };
+
+      const renderCard = item => `
+        <div class="row-card">
+          <div class="staff-row-grid">
+            <div class="field">
+              <label>分组名称</label>
+              <input type="text" data-staff-field="name" data-id="${item.id}" value="${escapeHtml(item.name)}" placeholder="如：919 队 / 厨师 / 大夫" />
+            </div>
+            <div class="field">
+              <label>类别</label>
+              <select data-staff-field="category" data-id="${item.id}">
+                ${CATEGORY_OPTIONS.map(opt => `<option value="${opt}" ${item.category === opt ? 'selected' : ''}>${opt}</option>`).join('')}
+              </select>
+            </div>
+            <div class="field">
+              <label>人数</label>
+              <input type="number" min="0" data-staff-field="count" data-id="${item.id}" value="${item.count}" />
+            </div>
+            <button type="button" class="danger small" data-remove-staff="${item.id}">删除</button>
+          </div>
+        </div>
+      `;
+
+      box.innerHTML = `
+        <div class="staff-columns">
+          <div class="staff-column">
+            <div class="staff-column-head">
+              <div>
+                <h3>中方人员分组</h3>
+                <div class="staff-column-sub">919 队、厨师、大夫、顶驱、基地经理等</div>
               </div>
-              <div class="field">
-                <label>类别</label>
-                <select data-staff-field="category" data-id="${item.id}">
-                  ${CATEGORY_OPTIONS.map(opt => `<option value="${opt}" ${item.category === opt ? 'selected' : ''}>${opt}</option>`).join('')}
-                </select>
-              </div>
-              <div class="field">
-                <label>人数</label>
-                <input type="number" min="0" data-staff-field="count" data-id="${item.id}" value="${item.count}" />
-              </div>
-              <button type="button" class="danger small" data-remove-staff="${item.id}">删除</button>
+            </div>
+            <div class="staff-column-list">
+              ${grouped.chinese.length ? grouped.chinese.map(renderCard).join('') : '<div class="row-card empty">暂无中方分组</div>'}
+            </div>
+            <div class="staff-column-footer">
+              <button type="button" class="ghost small" data-add-staff-category="中方人员">+ 添加中方分组</button>
             </div>
           </div>
-        `).join('');
-      }
+          <div class="staff-column">
+            <div class="staff-column-head">
+              <div>
+                <h3>外籍人员分组</h3>
+                <div class="staff-column-sub">当地雇员、士兵、安保等</div>
+              </div>
+            </div>
+            <div class="staff-column-list">
+              ${grouped.foreign.length ? grouped.foreign.map(renderCard).join('') : '<div class="row-card empty">暂无外籍分组</div>'}
+            </div>
+            <div class="staff-column-footer">
+              <button type="button" class="ghost small" data-add-staff-category="当地雇员">+ 添加外籍分组</button>
+            </div>
+          </div>
+        </div>
+      `;
+
       renderStaffStats();
     }
 
     function getStaffSummary() {
-      const summary = { '中方': 0, '外籍': 0, '自定义': 0 };
-      const detail = { '中方': [], '外籍': [], '自定义': [] };
+      const summary = { '中方': 0, '外籍': 0 };
+      const detailMap = { '中方': new Map(), '外籍': new Map(), '自定义': new Map() };
 
       state.staffEntries.forEach(item => {
         const name = String(item.name || '').trim();
         const category = normalizeCategory(item.category, item.name);
         const count = Math.max(0, parseInt(item.count || 0, 10) || 0);
-        summary[category] += count;
-        if (count > 0 && name) detail[category].push(`${name}${count}人`);
+        if (category === '中方人员') {
+          summary['中方'] += count;
+          if (count > 0 && name) detailMap['中方'].set(name, (detailMap['中方'].get(name) || 0) + count);
+        } else if (category === '当地雇员') {
+          summary['外籍'] += count;
+          if (count > 0 && name) detailMap['外籍'].set(name, (detailMap['外籍'].get(name) || 0) + count);
+        } else if (count > 0 && name) {
+          detailMap['自定义'].set(name, (detailMap['自定义'].get(name) || 0) + count);
+        }
       });
 
       state.titleEntries.forEach(item => {
         const title = String(item.title || '').trim();
         const name = String(item.name || '').trim();
         const category = normalizeCategory(item.category, item.title);
-        const count = Math.max(0, parseInt(item.count ?? 1, 10) || 0);
-        summary[category] += count;
-        if (count > 0 && (title || name)) {
-          detail[category].push(`${title || '头衔'}${name ? `(${name})` : ''}${count}人`);
+        const count = (title || name) ? 1 : 0;
+        if (category === '中方人员' && count > 0) {
+          summary['中方'] += count;
+        } else if (category === '当地雇员' && count > 0) {
+          summary['外籍'] += count;
         }
       });
 
-      return { summary, detail, total: Object.values(summary).reduce((a, b) => a + b, 0) };
+      const detail = Object.fromEntries(Object.entries(detailMap).map(([key, map]) => [
+        key,
+        Array.from(map.entries()).map(([name, count]) => `${name} ${count} 人`)
+      ]));
+
+      return { summary, detail, total: summary['中方'] + summary['外籍'] };
     }
 
     function renderStaffStats() {
@@ -856,9 +968,8 @@
       const box = document.getElementById('staffStats');
       box.innerHTML = [
         ['总人数', total],
-        ['中方', summary['中方']],
-        ['外籍', summary['外籍']],
-        ['自定义', summary['自定义']]
+        ['中方人员', summary['中方']],
+        ['外籍人员', summary['外籍']]
       ].map(([k, v]) => `
         <div class="stat-card">
           <div class="k">${k}</div>
@@ -946,37 +1057,66 @@
           title: String(item.title || '').trim(),
           name: String(item.name || '').trim(),
           category: normalizeCategory(item.category, item.title),
-          count: Math.max(0, parseInt(item.count ?? 1, 10) || 0),
           resident: Boolean(item.resident)
         }))
         .filter(item => item.title || item.name);
 
+      const categoryLabelMap = {
+        '中方人员': '中方',
+        '当地雇员': '外籍',
+        '自定义': '自定义'
+      };
+
       const lines = active.map(item => {
         const head = item.title || '头衔';
         const person = item.name ? `：${item.name}` : '';
-        const extra = item.count > 0 ? `（${item.category} ${item.count}人）` : '';
+        const extra = `（${categoryLabelMap[item.category] || item.category} 1人）`;
         return `${head}${person}${extra}`;
       });
 
-      return { active, lines };
+      const grouped = new Map();
+      active.forEach(item => {
+        const head = item.title || '头衔';
+        const person = String(item.name || '').trim();
+        if (!grouped.has(head)) grouped.set(head, []);
+        if (person) grouped.get(head).push(person);
+      });
+      const leaderBarText = Array.from(grouped.entries())
+        .map(([title, names]) => `${title}：${names.length ? names.join('，') : '-'}`)
+        .join(' / ');
+
+      return { active, lines, leaderBarText };
     }
 
     function generateReport() {
       const { summary, detail } = getStaffSummary();
       const titleInfo = buildTitleText();
+      
+      // 领导人数按归属计入总数，但括号里不显示领导（只显示普通人员分组）
+      // 需要从 detail 中过滤掉领导分组
+      const leaderTitles = new Set(state.titleEntries.filter(t => t.title || t.name).map(t => String(t.title || '').trim() || '头衔'));
+      const chineseNonLeader = detail['中方'].filter(item => {
+        // 提取分组名（如"919 队 14 人" -> "919 队"）
+        const groupName = item.replace(/\s+\d+\s*人$/, '');
+        return !leaderTitles.has(groupName);
+      });
+      const foreignNonLeader = detail['外籍'].filter(item => {
+        const groupName = item.replace(/\s+\d+\s*人$/, '');
+        return !leaderTitles.has(groupName);
+      });
+      
       const personnelParts = [];
-      personnelParts.push(`中方人员 ${summary['中方']} 人${detail['中方'].length ? `（${detail['中方'].join('，')}）` : ''}`);
-      personnelParts.push(`外籍人员 ${summary['外籍']} 人${detail['外籍'].length ? `（${detail['外籍'].join('，')}）` : ''}`);
-      if (summary['自定义'] > 0) {
-        personnelParts.push(`自定义人员 ${summary['自定义']} 人${detail['自定义'].length ? `（${detail['自定义'].join('，')}）` : ''}`);
-      }
+      const chineseDetailText = chineseNonLeader.length ? `（${chineseNonLeader.join('，')}）` : '';
+      const foreignDetailText = foreignNonLeader.length ? `（${foreignNonLeader.join('，')}）` : '';
+      personnelParts.push(`中方人员 ${summary['中方']} 人${chineseDetailText}`);
+      personnelParts.push(`外籍人员 ${summary['外籍']} 人${foreignDetailText}`);
 
       const residentLeaders = titleInfo.active
         .filter(item => item.resident && (item.title || item.name))
         .map(item => `${item.title || ''}${item.name || ''}`)
         .filter(Boolean);
-      const residentText = residentLeaders.length ? `${residentLeaders.join('、')}驻井指导工作` : '';
-      const personnelLine = `4.人员情况：${personnelParts.join('；')}${residentText ? `；${residentText}` : ''}。`;
+      const residentText = residentLeaders.length ? `${residentLeaders.join('，')}驻井指导工作。` : '';
+      const personnelLine = `4.人员情况：${personnelParts.join('；')}${residentText ? `。${residentText}` : '。'}`;
 
       const reportLines = [
         `1.单位名称：${state.unitName || ''}`,
@@ -984,10 +1124,6 @@
         `3.所在区域：${state.area || ''}`,
         personnelLine
       ];
-
-      if (titleInfo.lines.length) {
-        reportLines.push(`领导头衔：${titleInfo.lines.join('；')}。`);
-      }
 
       const report = reportLines.concat([
         `5.生活物资储备天数：${state.foodDays || 0}天；井场柴油${state.dieselAmount || 0}方，可用${state.dieselDays || 0}天。`,
@@ -1042,9 +1178,17 @@
       showToast('已恢复默认配置');
     }
 
+    function renderLeaderBar() {
+      const el = document.getElementById('leaderBar');
+      if (!el) return;
+      const { leaderBarText } = buildTitleText();
+      el.textContent = leaderBarText || '暂无领导信息';
+    }
+
     function renderAll() {
       renderInputs();
       renderTitles();
+      renderLeaderBar();
       renderStaff();
       renderConditionSummary('today');
       renderConditionSummary('next');
@@ -1065,9 +1209,10 @@
     }
 
     document.getElementById('addTitleBtn').addEventListener('click', () => {
-      state.titleEntries.push({ id: uid(), title: '新头衔', name: '', category: '中方', count: 1, resident: false });
+      state.titleEntries.push({ id: uid(), title: '新头衔', name: '', category: '中方', resident: false });
       saveState(true);
       renderTitles();
+      renderLeaderBar();
       renderStaffStats();
       generateReport();
     });
@@ -1081,9 +1226,10 @@
       if (field === 'resident') {
         item.resident = Boolean(e.target.checked);
       } else {
-        item[field] = field === 'count' ? Math.max(0, parseInt(e.target.value || 0, 10) || 0) : e.target.value;
+        item[field] = e.target.value;
       }
       saveState();
+      renderLeaderBar();
       renderStaffStats();
       generateReport();
     });
@@ -1102,6 +1248,7 @@
         return;
       }
       saveState();
+      renderLeaderBar();
       renderStaffStats();
       generateReport();
     });
@@ -1112,15 +1259,33 @@
       state.titleEntries = state.titleEntries.filter(x => x.id !== btn.dataset.removeTitle);
       saveState(true);
       renderTitles();
+      renderLeaderBar();
       renderStaffStats();
       generateReport();
     });
 
     document.getElementById('addStaffBtn').addEventListener('click', () => {
-      state.staffEntries.push({ id: uid(), name: '新分组', category: '中方', count: 0 });
+      state.staffEntries.push({ id: uid(), name: '新分组', category: '中方人员', count: 0 });
       saveState(true);
       renderStaff();
       generateReport();
+    });
+
+    document.getElementById('staffList').addEventListener('click', e => {
+      const addBtn = e.target.closest('[data-add-staff-category]');
+      if (addBtn) {
+        const category = normalizeCategory(addBtn.dataset.addStaffCategory, addBtn.dataset.addStaffCategory);
+        state.staffEntries.push({
+          id: uid(),
+          name: '新分组',
+          category,
+          count: 0
+        });
+        saveState(true);
+        renderStaff();
+        generateReport();
+        return;
+      }
     });
 
     document.getElementById('staffList').addEventListener('input', e => {
