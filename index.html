@@ -117,17 +117,7 @@
       justify-content: stretch;
     }
     .staff-columns::before {
-      content: "";
-      position: absolute;
-      top: 0;
-      bottom: 0;
-      left: 50%;
-      width: 4px;
-      transform: translateX(-50%);
-      border-radius: 999px;
-      background: linear-gradient(180deg, #8b5cf6 0%, #7c3aed 100%);
-      opacity: 0.9;
-      pointer-events: none;
+      display: none;
     }
     .staff-column {
       width: 100%;
@@ -149,10 +139,12 @@
     .staff-column:nth-child(1) {
       grid-column: 1;
       padding-right: 14px;
+      border-right: none;
     }
     .staff-column:nth-child(2) {
       grid-column: 2;
       padding-left: 14px;
+      border-left: none;
     }
     .staff-column-head {
       width: 100%;
@@ -255,6 +247,27 @@
       user-select: none;
       transition: .15s ease;
       display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .tag .remove-tag {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #e0e7ff;
+      color: var(--primary);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      line-height: 1;
+      cursor: pointer;
+      transition: .15s ease;
+    }
+    .tag .remove-tag:hover {
+      background: var(--primary);
+      color: #fff;
+    }
       align-items: center;
       gap: 6px;
     }
@@ -557,8 +570,8 @@
           <textarea id="preview" class="preview" readonly placeholder="点击“生成日报”后在这里查看内容"></textarea>
         </section>
 
-        <section class="panel" id="historyPanel" style="display:none;">
-          <h2>历史记录查询</h2>
+        <section class="panel" id="historyPanel">
+          <h2>历史记录</h2>
           <div class="history-toolbar">
             <div class="field" style="min-width:180px; flex:1;">
               <label for="historyDate">按日期查询</label>
@@ -610,9 +623,9 @@
     const defaultData = {
       unitName: 'Rig919',
       date: '',
-      area: 'H',
-      wellName: 'Raphia SW1-22',
-      designDepth: '1086',
+      area: '',
+      wellName: '',
+      designDepth: '',
       currentDepth: '',
       foodDays: 30,
       dieselAmount: 53,
@@ -622,19 +635,8 @@
       satInternal: '6660353',
       satExternal: '021-80246760',
       safety: '周边安全无异常',
-      titleEntries: [
-        { id: uid(), title: '基地经理', name: '赵铁寨', category: '中方人员', resident: true }
-      ],
-      staffEntries: [
-        { id: uid(), name: '919 队', category: '中方', count: 14 },
-        { id: uid(), name: '厨师', category: '中方', count: 3 },
-        { id: uid(), name: '大夫', category: '中方', count: 2 },
-        { id: uid(), name: '顶驱', category: '中方', count: 1 },
-        { id: uid(), name: '基地经理', category: '中方', count: 1 },
-        { id: uid(), name: '当地雇员', category: '外籍', count: 29 },
-        { id: uid(), name: '士兵', category: '外籍', count: 8 },
-        { id: uid(), name: '安保', category: '外籍', count: 13 }
-      ],
+      titleEntries: [],
+      staffEntries: [],
       workConditions: [
         '一开验收', '整改', '组合 BHA', '技术交底', '一开钻进',
         '循环', '短起下', '起钻', '下套管', '组合钻具',
@@ -984,7 +986,6 @@
       `;
 
       box.innerHTML = `
-        <div class="staff-columns">
           <div class="staff-column">
             <div class="staff-column-head">
               <div>
@@ -1013,7 +1014,6 @@
               <button type="button" class="ghost small" data-add-staff-category="外籍">+ 添加外籍分组</button>
             </div>
           </div>
-        </div>
       `;
 
       renderStaffStats();
@@ -1094,7 +1094,10 @@
       const selectedSet = new Set(selected);
       document.getElementById('modalTitle').textContent = activeConditionType === 'today' ? '选择今日工况' : '选择下步工况';
       document.getElementById('modalTags').innerHTML = state.workConditions.map(text => `
-        <span class="tag ${selectedSet.has(text) ? 'active' : ''}" data-modal-tag="${escapeHtml(text)}">${escapeHtml(text)}</span>
+        <span class="tag ${selectedSet.has(text) ? 'active' : ''}" data-modal-tag="${escapeHtml(text)}">
+          ${escapeHtml(text)}
+          <span class="remove-tag" title="删除常用工况" aria-label="删除 ${escapeHtml(text)}" data-remove-tag="${escapeHtml(text)}">×</span>
+        </span>
       `).join('');
       const selectedBox = document.getElementById('modalSelectedList');
       if (!selected.length) {
@@ -1427,6 +1430,14 @@
     });
 
     document.getElementById('modalTags').addEventListener('click', e => {
+      const removeBtn = e.target.closest('[data-remove-tag]');
+      if (removeBtn) {
+        const text = removeBtn.dataset.removeTag;
+        state.workConditions = state.workConditions.filter(t => t !== text);
+        saveState(true);
+        renderConditionModal();
+        return;
+      }
       const tag = e.target.closest('[data-modal-tag]');
       if (!tag) return;
       toggleConditionFromModal(tag.dataset.modalTag);
@@ -1476,8 +1487,7 @@
     document.getElementById('copyBtn').addEventListener('click', copyReport);
     document.getElementById('exportBtn').addEventListener('click', exportTxt);
     document.getElementById('historyBtn').addEventListener('click', () => {
-      document.getElementById('historyDate').value = state.date || '';
-      showHistoryPanel('date');
+      document.getElementById('historyPanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
     document.getElementById('searchHistoryBtn').addEventListener('click', () => showHistoryPanel('date'));
     document.getElementById('showAllHistoryBtn').addEventListener('click', () => showHistoryPanel('all'));
